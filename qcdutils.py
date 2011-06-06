@@ -3,12 +3,12 @@
 
 LOGO ="""
 
- #######   ######  ########     ##     ## ######## #### ##        ######  
-##     ## ##    ## ##     ##    ##     ##    ##     ##  ##       ##    ## 
-##     ## ##       ##     ##    ##     ##    ##     ##  ##       ##       
-##     ## ##       ##     ##    ##     ##    ##     ##  ##        ######  
-##  ## ## ##       ##     ##    ##     ##    ##     ##  ##             ## 
-##    ##  ##    ## ##     ##    ##     ##    ##     ##  ##       ##    ## 
+ #######   ######  ########     ##     ## ######## #### ##        ######
+##     ## ##    ## ##     ##    ##     ##    ##     ##  ##       ##    ##
+##     ## ##       ##     ##    ##     ##    ##     ##  ##       ##
+##     ## ##       ##     ##    ##     ##    ##     ##  ##        ######
+##  ## ## ##       ##     ##    ##     ##    ##     ##  ##             ##
+##    ##  ##    ## ##     ##    ##     ##    ##     ##  ##       ##    ##
  ##### ##  ######  ########      #######     ##    #### ########  ######
 Created by Massimo Di Pierro - License GPL2 - all-to-all convertion utility
 For the latest source and documentation: http://code.google.com/p/qcdutils/
@@ -76,7 +76,7 @@ class Lime(object):
     @staticmethod
     def xml_parser(data):
         def f(name,dxml = dom.parseString(data)):
-            return dxml.getElementsByTagName(name)[0].childNodes[0].nodeValue        
+            return dxml.getElementsByTagName(name)[0].childNodes[0].nodeValue
         return f
     def __init__(self,filename,mode,version = 1):
         """
@@ -97,13 +97,13 @@ class Lime(object):
                     raise IOError, "not in lime format"
                 ### the following line is VERY IMPORTANT
                 # name contains (must contain) the C-style string zero
-                # this is potentially a serious security vulnerability 
+                # this is potentially a serious security vulnerability
                 # of the LIME file format
                 name = name[:name.find('\0')]
                 position = self.file.tell()
                 self.records.append((name,position,size)) # in bytes
                 padding = (8 - (size % 8)) % 8
-                self.file.seek(size+padding,1)        
+                self.file.seek(size+padding,1)
         self.dump_info()
 
     def dump_info(self,filename=None):
@@ -271,10 +271,10 @@ class QCDFormat(object):
             items = reorder(items,(T,X,Y,Z),self.link_order)
         n = len(items)
         return struct.pack(self.endianess+str(n)+self.precision,*items)
-    def __init__(self,filename): 
+    def __init__(self,filename):
         """set defaults"""
         pass
-    def read_header(self): 
+    def read_header(self):
         """read file header or fails"""
         return ('f',8,4,4,4) # open file
     def read_data(self,t,x,y,z):
@@ -282,13 +282,13 @@ class QCDFormat(object):
         return (0,0,0,0,'data')
     def write_header(self,precision,nt,nx,ny,nz):
         """write header for new file"""
-        pass    
+        pass
     def write_data(self,data):
         """write next site variables, in order"""
         pass
     def close(self):
         """closes the file"""
-        self.file.close()    
+        self.file.close()
 
 class GaugeCold(QCDFormat):
     def __init__(self,nt = 8,nx = 4,ny = 4,nz = 4):
@@ -363,7 +363,7 @@ class GaugeMDP(QCDFormat):
         if len(data) != self.base_size:
             raise RuntimeError, "invalid data size"
         return self.file.write(self.pack(data))
-    def convert_from(self,other,target_precision = None):        
+    def convert_from(self,other,target_precision = None):
         (precision,nt,nx,ny,nz) = other.read_header()
         print '  (precision: %s, size: %ix%ix%ix%i)' % (precision,nt,nx,ny,nz)
         self.write_header(target_precision or precision,nt,nx,ny,nz)
@@ -379,7 +379,7 @@ class GaugeMDP(QCDFormat):
 
 
 class GaugeMDPSplit(GaugeMDP):
-    def convert_from(self,other,target_precision = None):        
+    def convert_from(self,other,target_precision = None):
         (precision,nt,nx,ny,nz) = other.read_header()
         print '  (precision: %s, size: %ix%ix%ix%i)' % (precision,nt,nx,ny,nz)
         pbar = ProgressBar(widgets = default_widgets , maxval = nt).start()
@@ -445,7 +445,7 @@ class PropagatorMDP(QCDFormat):
         if len(data) != self.base_size:
             raise RuntimeError, "invalid data size"
         return self.file.write(self.pack(data))
-    def convert_from(self,other,target_precision = None):        
+    def convert_from(self,other,target_precision = None):
         (precision,nt,nx,ny,nz) = other.read_header()
         print '  (precision: %s, size: %ix%ix%ix%i)' % (precision,nt,nx,ny,nz)
         self.write_header(target_precision or precision,nt,nx,ny,nz)
@@ -486,7 +486,7 @@ class PropagatorMDPSplit(QCDFormat):
         if len(data) != self.base_size:
             raise RuntimeError, "invalid data size"
         return self.file.write(self.pack(data))
-    def convert_from(self,other,target_precision = None):        
+    def convert_from(self,other,target_precision = None):
         (precision,nt,nx,ny,nz) = other.read_header()
         print '  (precision: %s, size: %ix%ix%ix%i)' % (precision,nt,nx,ny,nz)
         pbar = ProgressBar(widgets = default_widgets , maxval = nt).start()
@@ -561,7 +561,7 @@ class GaugeILDG(QCDFormat):
 <precision>%(precision)s</precision>
 <lx>%(lx)s</lx><ly>%(ly)s</ly><lz>%(lz)s</lz><lt>%(lt)s</lt>
 </ildgFormat>""" % d
-        self.lime.write('ildg-format',data)        
+        self.lime.write('ildg-format',data)
     def read_data(self,t,x,y,z):
         (nt,nx,ny,nz) = self.size
         i = self.offset + (x+nx*(y+ny*(z+nz*t)))*self.site_size
@@ -572,14 +572,14 @@ class GaugeILDG(QCDFormat):
         if len(data) != self.base_size:
             raise RuntimeError, "invalid data size"
         return self.file.write(self.pack(data))
-    def convert_from(self,other,target_precision = None):        
+    def convert_from(self,other,target_precision = None):
         (precision,nt,nx,ny,nz) = other.read_header()
         print '  (precision: %s, size: %ix%ix%ix%i)' % (precision,nt,nx,ny,nz)
         self.write_header(target_precision or precision,nt,nx,ny,nz)
         pbar = ProgressBar(widgets = default_widgets , maxval = self.size[0]).start()
         def reader():
             for t in xrange(nt):
-                for z in xrange(nz):            
+                for z in xrange(nz):
                     for y in xrange(ny):
                         for x in xrange(nx):
                             data = other.read_data(t,x,y,z)
@@ -653,7 +653,7 @@ class GaugeMILC(QCDFormat):
         self.filename = filename
         self.header_format = '<i4i64siii' # may change
         self.endianess = '<' # may change
-        self.header_size = 96 
+        self.header_size = 96
         self.offset = None
         self.site_size = None
         self.base_size = 4*9*2
@@ -674,8 +674,8 @@ class GaugeMILC(QCDFormat):
                 else:
                     raise IOError, "file not in GaugeMILC fomat"
                 self.offset = self.file.tell()
-                self.size = (nt,nx,ny,nz)                
-                return (self.precision,nt,nx,ny,nz)            
+                self.size = (nt,nx,ny,nz)
+                return (self.precision,nt,nx,ny,nz)
         raise IOError, "file not in GaugeMDP format"
     def read_data(self,t,x,y,z):
         (nt,nx,ny,nz) = self.size
@@ -723,8 +723,8 @@ class GaugeNERSC(QCDFormat):
             self.site_size = self.base_size*8
         else:
             raise IOError, "unable to determine input precision"
-        self.size = (nt,nx,ny,nz)        
-        return (self.precision,nt,nx,ny,nz)        
+        self.size = (nt,nx,ny,nz)
+        return (self.precision,nt,nx,ny,nz)
     def read_data(self,t,x,y,z):
         (nt,nx,ny,nz) = self.size
         i = self.offset + (x+nx*(y+ny*(z+nz*t)))*self.site_size
@@ -735,7 +735,7 @@ class GaugeNERSC(QCDFormat):
             new_items = []
             for i in range(4):
                 new_items += reunitarize(items[i*12:(i+1)*12])
-            items = new_items        
+            items = new_items
         return items
 
 OPTIONS = {
@@ -755,7 +755,7 @@ def universal_converter(path,target,precision,convert=True):
     processed = set()
     messages = []
     option = target and OPTIONS[target] or ALL
-    for filename in filenames:        
+    for filename in filenames:
         for formatter in option[1:]:
             if convert:
                 messages.append('trying to convert %s (%s)' %(filename,formatter.__name__))
@@ -764,7 +764,7 @@ def universal_converter(path,target,precision,convert=True):
                     ofilename = filename+'.'+target
                     option[0](ofilename).convert_from(formatter(filename),precision)
                 else: # just pretend and get header info
-                    info = formatter(filename).read_header()                    
+                    info = formatter(filename).read_header()
                     notify('%s ... %s %s' % (filename,formatter.__name__,info))
                 processed.add(filename)
                 break
@@ -1140,11 +1140,11 @@ def download(files,target_folder,options):
             notify('skipping file %s (already present)' % basename)
 
 def ftp_download(source,target_folder,username,password):
-    raise NotImplementedError   
+    raise NotImplementedError
 
 def test_conversions():
     try:
-        passed = False        
+        passed = False
         test_lime()
         GaugeMDP('test.zzz.1.mdp').convert_from(GaugeCold(4,4,4,4))
         GaugeILDG('test.zzz.1.ildg').convert_from(GaugeMDP('test.zzz.1.mdp'))
@@ -1163,7 +1163,7 @@ def test_conversions():
         notify('tests failed:\n%s' % traceback.format_exc())
     finally:
         notify('cleaning up tmp files')
-        os.system('rm test.zzz.?.*')
+        os.system('rm test.zzz.*')
     if not passed:
         sys.exit(1)
 
