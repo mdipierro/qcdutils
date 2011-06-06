@@ -95,7 +95,7 @@ class Lime(object):
                 position = self.file.tell()
                 self.records.append((name,position,size)) # in bytes
                 padding = (8 - (size % 8)) % 8
-                self.file.seek(size+padding,1)
+                self.file.seek(size+padding,1)        
         self.dump_info()
 
     def dump_info(self,filename=None):
@@ -322,7 +322,7 @@ class GaugeMDP(QCDFormat):
         header = self.file.read(self.header_size)
         items = struct.unpack(self.header_format,header)
         if items[3] != 1325884739:
-            notify('warning, this does not appear a MDP file, but could be wrong')
+            pass # should this raise exception?
         nt,nx,ny,nz = items[5:9]
         self.site_size = items[15]
         if self.site_size == self.base_size*4:
@@ -405,7 +405,7 @@ class PropagatorMDP(QCDFormat):
         header = self.file.read(self.header_size)
         items = struct.unpack(self.header_format,header)
         if items[3] != '1325884739':
-            notify('warning, this does not appear a MDP file, but could be wrong')
+            pass # should this raise exception
         nt,nx,ny,nz = items[5:9]
         self.site_size = items[15]
         if self.site_size == self.base_size*4:
@@ -734,25 +734,36 @@ OPTIONS = {
     'split.prop.mdp':(PropagatorMDPSplit,PropagatorMDP,PropagatorSCIDAC),
     }
 
-def universal_converter(path,target,precision):
-    filenames = [f for f in glob.glob(path) if not f[-4:] == '.'+target]
+ALL = (GaugeMDP,GaugeMILC,GaugeNERSC,GaugeILDG,GaugeSCIDAC,PropagatorMDP,PropagatorSCIDAC)
+
+def universal_converter(path,target,precision,convert=True):
+    filenames = glob.glob(path)
     if not filenames: raise RuntimeError, "no files to be converted"
     processed = set()
     messages = []
-    option = OPTIONS[target]    
+    option = target and OPTIONS[target] or ALL
     for filename in filenames:        
         for formatter in option[1:]:
-            messages.append('trying to convert %s (%s)' %(filename,formatter))
+            if convert:
+                messages.append('trying to convert %s (%s)' %(filename,formatter.__name__))
             try:
-                ofilename = filename+'.'+target
-                option[0](ofilename).convert_from(formatter(filename),precision)
+                if convert:
+                    ofilename = filename+'.'+target
+                    option[0](ofilename).convert_from(formatter(filename),precision)
+                else: # just pretend and get header info
+                    info = formatter(filename).read_header()                    
+                    notify('%s ... %s %s' % (filename,formatter.__name__,info))
                 processed.add(filename)
                 break
             except Exception, e:
-                messages.append('unable to convert:\n' + traceback.format_exc())
+                if convert:
+                    messages.append('unable to convert:\n' + traceback.format_exc())
         if not filename in processed:
-            notify('\n'.join(messages))
-            sys.exit(1)
+            if convert:
+                notify('\n'.join(messages))
+                sys.exit(1)
+            else:
+                notify('%s .... UNKOWN FORMAT' % filename)
 
 ##### BEGIN PROGRESSBAR ######
 # progressbar  - Text progressbar library for python.
@@ -1233,6 +1244,8 @@ def main():
         precision = 'f' if options.float_precision else \
             'd' if options.double_precision else None
         universal_converter(conversion_path,options.convert,precision)
+    else:
+        universal_converter(conversion_path,options.convert,precision=None,convert=False)
 
 
 if __name__ == '__main__': main()
