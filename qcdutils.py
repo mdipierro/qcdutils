@@ -11,46 +11,20 @@ LOGO ="""
 ##    ##  ##    ## ##     ##    ##     ##    ##     ##  ##       ##    ## 
  ##### ##  ######  ########      #######     ##    #### ########  ######
 Created by Massimo Di Pierro - License GPL2 - all-to-all convertion utility
+For the latest source and documentation: http://code.google.com/p/qcdutils/
 """
 
-USAGE ="""Usage:
+USAGE ="""
+Usage:
 
-  $ qcdutils.py [options] source
+    qcdutils.py [options] sources
 
-Source can be a link to a NERSC ensable, a local file or a glob pattern 
-(for example *.milc, folder/*.ildg)
+Examples:
 
-Help:
-  $ qcdutils.py -h
- 
-convert files into ILDG format
-  $ qcdutils.py -c ildg sources/*
-
-convert files into fermiqcd (.mdp) format (keep precision):
-  $ qcdutils.py -c mdp sources/*
-
-convert files into fermiqcd (.mdp) format (float precision)
-  $ qcdutils.py -c -4 mdp sources/*
-
-convert files into fermiqcd (.mdp) format (double precision)
-  $ qcdutils.py -c -8 mdp sources/*
-
-convert SCIDAC propagators into fermiqcd (.mdp) format
-  $ qcdutils.py -c prop.mdp sources/*
-
-break a gauge configuration into timeslices (mdp format)
-  $ qcdutils.py -c split.mdp source
-  (will make one file per timeslice)
-
-break a propagator into timeslices (mdp format)
-  $ qcdutils.py -c split.prop.mdp source
-  (will make one file per timeslice)
-
-download an ensable from NERSC:
-  $ qcdutils.py <link>
-
-Notice: qcdutils.py runs in the folder here files are located unless, in case of 
-donwloads, a --destination folder is specified.
+    qcdutils.py --test
+    qcdutils.py --convert ildg gauge.cold.12x8x8x8
+    qcdutils.py --convert mdp --float *.ildg
+    qcdutlls.py --convert split.mdp *.mdp
 
 """
 
