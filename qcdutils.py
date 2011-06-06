@@ -68,7 +68,11 @@ def notify(*a):
 ##### class Lime #############################################################
 
 class Lime(object):
-    """ based on this: http://usqcd.jlab.org/usqcd-docs/c-lime/lime_1p2.pdf"""
+    """
+    based on this: http://usqcd.jlab.org/usqcd-docs/c-lime/lime_1p2.pdf
+    Lime is basically a poor man's version of TAR:
+    it concatenates names byte strings.
+    """
     @staticmethod
     def xml_parser(data):
         def f(name,dxml = dom.parseString(data)):
@@ -91,7 +95,11 @@ class Lime(object):
                 magic, null,size, name = struct.unpack('!iiq128s',header)
                 if magic != 1164413355:
                     raise IOError, "not in lime format"
-                name = name[:name.find('\0')] # clenup junk from file
+                ### the following line is VERY IMPORTANT
+                # name contains (must contain) the C-style string zero
+                # this is potentially a serious security vulnerability 
+                # of the LIME file format
+                name = name[:name.find('\0')]
                 position = self.file.tell()
                 self.records.append((name,position,size)) # in bytes
                 padding = (8 - (size % 8)) % 8
@@ -511,6 +519,11 @@ class GaugeILDG(QCDFormat):
         for name,stream,size in self.lime:
             if name == 'ildg-format':
                 data = stream.read(size)
+                ### the following line is very important
+                # The ILDG format computes the record size of non binary data
+                # including the terminating zero of the C-style string representation
+                # this is potentially a serious security vulnerability
+                # of the ILDG file format.
                 while data.endswith('\0'): data = data[:-1] # bug in generating data
                 dxml = Lime.xml_parser(data)
                 field = dxml("field")
