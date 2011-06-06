@@ -1189,7 +1189,7 @@ def main():
                       default = False,help = 'no progress bars')
     parser.add_option("-d", "--destination",dest = 'destination',default = None,
                       help = "destination folder")
-    parser.add_option("-c", "--cpnvert",dest = 'convert',default = False,
+    parser.add_option("-c", "--convert",dest = 'convert',default = False,
                       help = "converts a field to format (mdp,ildg)")
     parser.add_option("-4", "--float",dest = 'float_precision',default = False,
                       action = 'store_true',
