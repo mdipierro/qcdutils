@@ -360,7 +360,7 @@ class GaugeMDP(QCDFormat):
         print '  (precision: %s, size: %ix%ix%ix%i)' % (precision,nt,nx,ny,nz)
         self.write_header(target_precision or precision,nt,nx,ny,nz)
         pbar = ProgressBar(widgets = default_widgets , maxval = self.size[0]).start()
-        for t in xrange(self.size[T]):
+        for t in xrange(nt):
             for x in xrange(nx):
                 for y in xrange(ny):
                     for z in xrange(nz):
