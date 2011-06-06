@@ -15,41 +15,41 @@ Created by Massimo Di Pierro - License GPL2 - all-to-all convertion utility
 
 USAGE ="""Usage:
 
-  $ qcdutils [options] source
+  $ qcdutils.py [options] source
 
 Source can be a link to a NERSC ensable, a local file or a glob pattern 
 (for example *.milc, folder/*.ildg)
 
-Example for help:
-  $ qcdutils -h
+Help:
+  $ qcdutils.py -h
  
-Example downloaed an ensable:
-  $ qcdutils source
+convert files into ILDG format
+  $ qcdutils.py -c ildg sources/*
 
-Example fetch an ensable in fermiqcd (.mdp) format.
-  $ qcdutils -c mdp source
+convert files into fermiqcd (.mdp) format (keep precision):
+  $ qcdutils.py -c mdp sources/*
 
-Example fetch an ensable in fermiqcd (.mdp) format an convert to float
-  $ qcdutils -c mdp -4 source
+convert files into fermiqcd (.mdp) format (float precision)
+  $ qcdutils.py -c -4 mdp sources/*
 
-Example fetch an ensable in fermiqcd (.mdp) format an convert to double
-  $ qcdutils -c mdp -8 source
+convert files into fermiqcd (.mdp) format (double precision)
+  $ qcdutils.py -c -8 mdp sources/*
 
-Example fetch an ensable in ildg (.ildg)
-  $ qcdutils -c ildg source
+convert SCIDAC propagators into fermiqcd (.mdp) format
+  $ qcdutils.py -c prop.mdp sources/*
 
-Example fetch an ensable in fermiqcd format and break it into timeslices
-  $ qcdutils -c split.mdp source
+break a gauge configuration into timeslices (mdp format)
+  $ qcdutils.py -c split.mdp source
   (will make one file per timeslice)
 
-Example fetch a propagator and convert in fermiqcd(.prop.mdp) format
-  $ qcdutils -c prop.mdp source
-
-Example fetch a propagator and convert in fermiqcd format and break into timeslices
-  $ qcdutils -c split.prop.mdp source
+break a propagator into timeslices (mdp format)
+  $ qcdutils.py -c split.prop.mdp source
   (will make one file per timeslice)
 
-Notice: qcdutils runs in the folder here files are located unless, in case of 
+download an ensable from NERSC:
+  $ qcdutils.py <link>
+
+Notice: qcdutils.py runs in the folder here files are located unless, in case of 
 donwloads, a --destination folder is specified.
 
 """
