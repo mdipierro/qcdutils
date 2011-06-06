@@ -1184,13 +1184,14 @@ class DummyProgressBar(object):
 def main():
     """this is the main program"""
     print LOGO
+    formats = ','.join(OPTIONS.keys())
     parser = optparse.OptionParser(usage = USAGE)
     parser.add_option("-q", "--quiet",dest = 'quiet',action = 'store_true',
                       default = False,help = 'no progress bars')
     parser.add_option("-d", "--destination",dest = 'destination',default = None,
                       help = "destination folder")
     parser.add_option("-c", "--convert",dest = 'convert',default = False,
-                      help = "converts a field to format (mdp,ildg)")
+                      help = "converts a field to format (%s)" % formats)
     parser.add_option("-4", "--float",dest = 'float_precision',default = False,
                       action = 'store_true',
                       help = "converts to float precision")
