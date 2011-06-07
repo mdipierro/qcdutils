@@ -55,7 +55,7 @@ import xml.parsers.expat as expat
 
 ##### global variables #############################################################
 
-CATALOG = 'qcdfetch.catalog'
+CATALOG = 'qcdutils.catalog'
 NOW = datetime.datetime.now()
 MAXBYTES = 1000  # max number of bytes for buffered reading
 PRECISION = {'f':32,'d':64}
@@ -1106,7 +1106,7 @@ def register_file(path,catalog=CATALOG):
     finally:
         catalog.close()
 
-def file_registered(path,catalog='qcdfetch.catalog',checksum=False):
+def file_registered(path,catalog='qcdutils.catalog',checksum=False):
     if not os.path.exists(path):
         return False
     size = os.path.getsize(path)
