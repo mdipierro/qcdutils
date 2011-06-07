@@ -1291,7 +1291,13 @@ def main():
         if not os.path.exists(target_folder):
             os.mkdir(target_folder)
         ftp_download(options.source,target_folder,username,password)
-    else:
+    elif os.path.basename(options.source).startswith(CATALOG):
+        db = shelve.open(options.source)
+        for key in sorted(db):
+            row = db[key]
+            notify('%s created on %s [%s]' % (key,row['timestamp'],row['md5sum']))
+        return
+    else:            
         conversion_path = options.source
 
     ### if options.source = 'gauge.cold.TxXxYxZ' make it
