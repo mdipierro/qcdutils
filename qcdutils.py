@@ -49,11 +49,13 @@ import array
 import fcntl
 import logging
 import traceback
+import shelve
 import xml.dom.minidom as dom
 import xml.parsers.expat as expat
 
 ##### global variables #############################################################
 
+CATALOG = 'qcdfetch.catalog'
 NOW = datetime.datetime.now()
 MAXBYTES = 1000  # max number of bytes for buffered reading
 PRECISION = {'f':32,'d':64}
@@ -750,8 +752,10 @@ OPTIONS = {
 ALL = (GaugeMDP,GaugeMILC,GaugeNERSC,GaugeILDG,GaugeSCIDAC,PropagatorMDP,PropagatorSCIDAC)
 
 def universal_converter(path,target,precision,convert=True):
-    filenames = glob.glob(path)
-    if not filenames: raise RuntimeError, "no files to be converted"
+    filenames = [f for f in glob.glob(path) if not f.endswith(CATALOG)]
+    if not filenames:
+        notify("no files to be converted")
+        return
     processed = set()
     messages = []
     option = target and OPTIONS[target] or ALL
@@ -762,7 +766,13 @@ def universal_converter(path,target,precision,convert=True):
             try:
                 if convert:
                     ofilename = filename+'.'+target
-                    option[0](ofilename).convert_from(formatter(filename),precision)
+                    if file_registered(ofilename):
+                        notify('file %s already exists and is updated' % ofilename)
+                    else:
+                        dest = option[0](ofilename)
+                        source = formatter(filename)
+                        dest.convert_from(source,precision)
+                        register_file(ofilename)
                 else: # just pretend and get header info
                     info = formatter(filename).read_header()
                     notify('%s ... %s %s' % (filename,formatter.__name__,info))
@@ -1080,6 +1090,41 @@ class ProgressBar(object):
 
 ###### END PROGRESSBAR #########
 
+def register_file(path,catalog=CATALOG):
+    if not os.path.exists(path):
+        return False
+    size = os.path.getsize(path)
+    md5sum = md5_for_large_file(path)
+    folder, name = os.path.split(path)
+    catalogfile = os.path.join(folder,catalog)
+    catalog = shelve.open(catalogfile)
+    try:
+        catalog[name] = dict(size=size,
+                             md5sum=md5sum,
+                             timestamp=datetime.datetime.now().isoformat())
+        return True
+    finally:
+        catalog.close()
+
+def file_registered(path,catalog='qcdfetch.catalog',checksum=False):
+    if not os.path.exists(path):
+        return False
+    size = os.path.getsize(path)
+    md5sum = checksum and md5_for_large_file(path)
+    folder, name = os.path.split(path)
+    catalogfile = os.path.join(folder,catalog)
+    catalog = shelve.open(catalogfile)
+    try:
+        if name in catalog:
+            options = (False,catalog[name]['md5sum'])
+            if catalog[name]['size']==size and md5sum in options:
+                return True
+            else:
+                del catalog[name]
+    finally:
+        catalog.close()
+    return False
+
 def md5_for_large_file(filename, block_size = 2**20):
     if not os.path.exists(filename):
         return None
@@ -1106,8 +1151,9 @@ def download(files,target_folder,options):
         path = f['filename']
         basename = os.path.basename(path)
         target_name = os.path.join(target_folder,basename)
-        if not os.path.exists(target_name) or \
-                os.path.getsize(target_name) != f['size']:
+        if file_registered(target_name):
+            notify('skipping file %s (already present)' % basename)
+        else:
             input = None
             widgets = [basename, Percentage(), ' ', Bar(marker = '>'),' ',
                        ETA(), ' ', FileTransferSpeed()]
@@ -1134,10 +1180,10 @@ def download(files,target_folder,options):
                 if not options.quiet: pbar.update(i)
             input.close()
             output.close()
-            if not options.quiet: pbar.finish()
-            notify('completed downloads: %s/%s' % (k,len(files)))
-        else:
-            notify('skipping file %s (already present)' % basename)
+            if not options.quiet:
+                pbar.finish()
+            register_file(target_name)
+            notify('completed download: %s/%s' % (k,len(files)))
 
 def ftp_download(source,target_folder,username,password):
     raise NotImplementedError
@@ -1228,7 +1274,8 @@ def main():
             notify('unable to connect')
             sys.exit(0)
         else:
-            regex = re.compile('pattern\ = (?P<pattern>[^\&]*)')
+            print options.source
+            regex = re.compile('pattern\=(?P<pattern>[^\&]*)')
             pattern = regex.search(options.source).group('pattern')
             target_folder = options.destination or urllib.unquote(pattern)
             notify('target folder:',target_folder)
