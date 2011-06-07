@@ -1184,8 +1184,11 @@ def download(files,target_folder,options):
             output.close()
             if not options.quiet:
                 pbar.finish()
-            register_file(target_name)
-            notify('completed download: %s/%s' % (k,len(files)))
+            if length == os.path.getsize(target_name):                
+                register_file(target_name)
+                notify('completed download: %s/%s' % (k,len(files)))
+            else:
+                notify('ERROR: file appears truncated')
 
 def ftp_download(source,target_folder,username,password):
     raise NotImplementedError
