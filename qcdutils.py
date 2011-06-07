@@ -106,7 +106,7 @@ class Lime(object):
                 self.records.append((name,position,size)) # in bytes
                 padding = (8 - (size % 8)) % 8
                 self.file.seek(size+padding,1)
-        self.dump_info()
+        # self.dump_info()
 
     def dump_info(self,filename=None):
         f = open(filename or (self.filename+'.fromlime.info'),'w')
@@ -752,7 +752,9 @@ OPTIONS = {
 ALL = (GaugeMDP,GaugeMILC,GaugeNERSC,GaugeILDG,GaugeSCIDAC,PropagatorMDP,PropagatorSCIDAC)
 
 def universal_converter(path,target,precision,convert=True):
-    filenames = [f for f in glob.glob(path) if not f.endswith(CATALOG)]
+    filenames = [f for f in glob.glob(path) \
+                     if not os.path.basename(f).startswith(CATALOG)]
+    print filenames
     if not filenames:
         notify("no files to be converted")
         return
@@ -1106,7 +1108,7 @@ def register_file(path,catalog=CATALOG):
     finally:
         catalog.close()
 
-def file_registered(path,catalog='qcdutils.catalog',checksum=False):
+def file_registered(path,catalog=CATALOG,checksum=False):
     if not os.path.exists(path):
         return False
     size = os.path.getsize(path)
