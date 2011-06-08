@@ -1280,7 +1280,7 @@ def main():
             sys.exit(0)
         else:
             print options.source
-            regex = re.compile('pattern\=(?P<pattern>[^\&]*)')
+            regex = re.compile('.*/(?P<pattern>[^/]*)$')
             pattern = regex.search(options.source).group('pattern')
             target_folder = options.destination or urllib.unquote(pattern)
             notify('target folder:',target_folder)

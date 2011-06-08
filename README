@@ -1,8 +1,184 @@
-bugs
+[http://qcdutils.googlecode.com/hg/qcdutils.py Download here]
 
-mixed protocols
+QCD utils is a single file utility to deal with Lattice QCD data (gauge configurations and propagators). It requires Python 2.5 or higher (but not Python 3.x which is not compatible with 2.x) but it requires no compilation steps and has no dependencies other than Python standard libraries. Upon download it should work out of the box.
 
-\0 should be in cluded in string
+{{{
+$ ./qcdutils.py -c ildg samples/lat.sample.l4444.milc 
 
-'<?xml version="1.0" encoding="UTF-8"?><ildgFormat xmlns="http://www.lqcd.org/ildg" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.lqcd.org/ildg/filefmt.xsd"><version>1.0</version><field>su3gauge</field><precision>32</precision><lx>4</lx><ly>4</ly><lz>4</lz><lt>4</lt></ildgFormat>\x00'
+ #######   ######  ########     ##     ## ######## #### ##        ######  
+##     ## ##    ## ##     ##    ##     ##    ##     ##  ##       ##    ## 
+##     ## ##       ##     ##    ##     ##    ##     ##  ##       ##       
+##     ## ##       ##     ##    ##     ##    ##     ##  ##        ######  
+##  ## ## ##       ##     ##    ##     ##    ##     ##  ##             ## 
+##    ##  ##    ## ##     ##    ##     ##    ##     ##  ##       ##    ## 
+ ##### ##  ######  ########      #######     ##    #### ########  ######
+Created by Massimo Di Pierro - License GPL2 - all-to-all convertion utility
 
+converting: samples/lat.sample.l4444.milc -> samples/lat.sample.l4444.milc.ildg
+  (precision: f, size: 4x4x4x4)
+ 100% |########################################################|
+}}}
+
+QCD utils can perform the following tasks:
+  * convert MILC gauge configurations to ILDG format
+  * convert NESRC (3x3) gauge configurations to ILDG format
+  * convert NESRC (3x2) gauge configurations to ILDG format
+  * convert MDP gauge configurations to ILDG format
+  * convert MILC gauge configurations to MDP format
+  * convert NERSC (3x3) gauge configurations to MDP format
+  * convert NERSC (3x2) gauge configurations to MDP format
+  * convert ILDG gauge configurations to MDP format
+  * convert Scidac propagators to MDP propagators
+  * convert from single to double precision
+  * convert from double to single precision
+  * make a cold gauge configuration of any size in MDP or ILDG format
+  * split a gauge configuration into MDP time-slices files
+  * split a propagator configuration into MDP time-slices files
+  * download data in batch from the new NERSC site (qcd.nersc.gov) and convert them upon download
+
+(the last feature will not be usable until the NEW gauge connection site is deployed into production).
+
+QCDutils is not designed to be fast (it is Python, not in C) but it is designed to be portable, readable and easy to use.
+
+  * has very small memory footprint (will run on your laptop even for the largest files)
+  * it includes an implementation of the LIME protocol in 104 lines of Python code
+  * it includes an implementation of the IDLG protocol in 80 lines of code.
+  * it includes an implementation of the MILC protocol in 34 lines of code.
+  * it auto detects the input file formats
+  * it shows a progress bar (can be disabled)
+  * provides automatic download resume 
+  * performs conversion tests
+  * it has a modular design (described later)
+  * keep track of completed work in a file called "qcdutils.catalog.db" in the same folder as the downloaded/processed data (unless you delete this file qcdutils will avoid duplication of work)
+
+== Examples ==
+
+Help:
+  {{{
+$ qcdutils.py -h
+
+Usage:                                                                                  
+                                                                                        
+    qcdutils.py [options] sources                                                       
+                                                                                        
+Examples:                                                                               
+                                                                                        
+    qcdutils.py --test                                                                  
+    qcdutils.py --convert ildg gauge.cold.12x8x8x8                                      
+    qcdutils.py --convert mdp --float *.ildg                                            
+    qcdutlls.py --convert split.mdp *.mdp 
+
+Options:
+  -h, --help            show this help message and exit
+  -q, --quiet           no progress bars
+  -d DESTINATION, --destination=DESTINATION
+                        destination folder
+  -c CONVERT, --convert=CONVERT
+                        converts a field to format
+                        (ildg,split.prop.mdp,prop.ildg,prop.mdp,split.mdp,mdp)
+  -4, --float           converts to float precision
+  -8, --double          converts to double precision
+  -t, --tests           runs some tests
+  -n, --noprogressbar   disable progress bar
+}}}
+ 
+convert files into ILDG format
+  {{{
+$ qcdutils.py -c ildg 'sources/*'
+}}}
+
+(if you use a star, source must be in quotes)
+
+make a cold ildg file
+  {{{
+$ qcdutils.py -c ildg gauge.cold.12x8x8x8
+}}}
+
+convert files into fermiqcd (.mdp) format (keep precision):
+  {{{
+$ qcdutils.py -c mdp 'sources/*'
+}}}
+
+convert files into fermiqcd (.mdp) format (float precision)
+  {{{
+$ qcdutils.py -c -4 mdp 'sources/*'
+}}}
+
+convert files into fermiqcd (.mdp) format (double precision)
+  {{{
+$ qcdutils.py -c -8 mdp 'sources/*'
+}}}
+
+convert SCIDAC propagators into fermiqcd (.mdp) format
+  {{{
+$ qcdutils.py -c prop.mdp 'sources/*'
+}}}
+
+break a gauge configuration into time-slices (fermiqcd format)
+  {{{
+$ qcdutils.py -c split.mdp source
+}}}
+  (will make one file per time-slice)
+
+break a propagator into timeslices (fermiqcd format)
+  {{{
+$ qcdutils.py -c split.prop.mdp source
+}}}
+  (will make one file per timeslice)
+
+download an ensemble from NERSC:
+  {{{
+$ qcdutils.py <nersc_link>
+}}}
+
+to obtain a log of past work history:
+
+{{{
+$ qcdutils.py qcdutils.catalog.db 
+
+...
+
+lat.sample.l4444.milc.ildg created on 2011-06-07T14:18:36.909596 
+      [0db17edf060b5d74848cdf97972bf41f]
+}}}
+
+== Modularity ==
+
+Every file format in QCDutils is represented by a class with the following structure
+
+{{{
+class <name>(QCDFormat):
+    def __init__(self,filename): 
+        ...
+    def read_header(self): 
+        """read file header or fail"""
+    def read_data(self,t,x,y,z):
+        """return a list of float/double numbers at site (t,x,y,z)"""
+    def write_header(self,precision,nt,nx,ny,nz):
+        """write header for new file"""
+    def write_data(self,data):
+        """write next site variables, in order"""
+    def close(self):
+        """closes the file"""
+    def convert_from(self,other,target_precision=None):
+        """other is an instance of another format"""
+        (precision,nt,nx,ny,nz) = other.read_header()
+        self.write_header(target_precision or precision,nt,nx,ny,nz)
+        # looping order depends on self class
+        for t in xrange(nt):
+            for z in xrange(nz):
+	    	for y in xrange(ny):
+                    for x in xrange(nx):
+		    	  site_data = other.read_data(t,x,y,z) # always read out of order
+                        self.write_data(site_data)            # always write in order
+}}}
+
+The {{{read_header}}} and {{{write_header}}} functions set self.precision, self.endianess, self.size=(nt,nx,ny,nz) that will be used by the {{{read_data}}} and {{{write_data}}} function respectively.
+
+The module can be easily extended to support other formats.
+
+== References ==
+  * http://www.physics.utah.edu/~detar/scidac/qio_2p3.pdf
+  * http://ildg.sasr.edu.au/Plone/ildg/ildg-standards/file-format-standards/ildg-file-format.pdf
+  * http://cd.nersc.gov/utilities/format-v103.ps.gz
+  * http://fermiqcd.net
