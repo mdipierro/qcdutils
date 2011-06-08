@@ -367,7 +367,7 @@ class GaugeMDP(QCDFormat):
         return self.file.write(self.pack(data))
     def convert_from(self,other,target_precision = None):
         (precision,nt,nx,ny,nz) = other.read_header()
-        print '  (precision: %s, size: %ix%ix%ix%i)' % (precision,nt,nx,ny,nz)
+        notify('  (precision: %s, size: %ix%ix%ix%i)' % (precision,nt,nx,ny,nz))
         self.write_header(target_precision or precision,nt,nx,ny,nz)
         pbar = ProgressBar(widgets = default_widgets , maxval = self.size[0]).start()
         for t in xrange(nt):
@@ -383,7 +383,7 @@ class GaugeMDP(QCDFormat):
 class GaugeMDPSplit(GaugeMDP):
     def convert_from(self,other,target_precision = None):
         (precision,nt,nx,ny,nz) = other.read_header()
-        print '  (precision: %s, size: %ix%ix%ix%i)' % (precision,nt,nx,ny,nz)
+        notify('  (precision: %s, size: %ix%ix%ix%i)' % (precision,nt,nx,ny,nz))
         pbar = ProgressBar(widgets = default_widgets , maxval = nt).start()
         for t in xrange(nt):
             slice = GaugeMDP(self.filename.replace('split.prop.mdp',
@@ -449,7 +449,7 @@ class PropagatorMDP(QCDFormat):
         return self.file.write(self.pack(data))
     def convert_from(self,other,target_precision = None):
         (precision,nt,nx,ny,nz) = other.read_header()
-        print '  (precision: %s, size: %ix%ix%ix%i)' % (precision,nt,nx,ny,nz)
+        notify('  (precision: %s, size: %ix%ix%ix%i)' % (precision,nt,nx,ny,nz))
         self.write_header(target_precision or precision,nt,nx,ny,nz)
         pbar = ProgressBar(widgets = default_widgets , maxval = self.size[0]).start()
         for t in xrange(nt):
@@ -490,7 +490,7 @@ class PropagatorMDPSplit(QCDFormat):
         return self.file.write(self.pack(data))
     def convert_from(self,other,target_precision = None):
         (precision,nt,nx,ny,nz) = other.read_header()
-        print '  (precision: %s, size: %ix%ix%ix%i)' % (precision,nt,nx,ny,nz)
+        notify('  (precision: %s, size: %ix%ix%ix%i)' % (precision,nt,nx,ny,nz))
         pbar = ProgressBar(widgets = default_widgets , maxval = nt).start()
         for t in xrange(nt):
             slice = PropagatorMDP(self.filename.replace('.split.mdp','.t%.4i.mdp' % t))
@@ -576,7 +576,7 @@ class GaugeILDG(QCDFormat):
         return self.file.write(self.pack(data))
     def convert_from(self,other,target_precision = None):
         (precision,nt,nx,ny,nz) = other.read_header()
-        print '  (precision: %s, size: %ix%ix%ix%i)' % (precision,nt,nx,ny,nz)
+        notify('  (precision: %s, size: %ix%ix%ix%i)' % (precision,nt,nx,ny,nz))
         self.write_header(target_precision or precision,nt,nx,ny,nz)
         pbar = ProgressBar(widgets = default_widgets , maxval = self.size[0]).start()
         def reader():
@@ -754,7 +754,6 @@ ALL = (GaugeMDP,GaugeMILC,GaugeNERSC,GaugeILDG,GaugeSCIDAC,PropagatorMDP,Propaga
 def universal_converter(path,target,precision,convert=True):
     filenames = [f for f in glob.glob(path) \
                      if not os.path.basename(f).startswith(CATALOG)]
-    print filenames
     if not filenames:
         notify("no files to be converted")
         return
@@ -1186,7 +1185,7 @@ def download(files,target_folder,options):
                 pbar.finish()
             if length == os.path.getsize(target_name):                
                 register_file(target_name)
-                notify('completed download: %s/%s' % (k,len(files)))
+                notify('completed download: %s/%s' % (k+1,len(files)))
             else:
                 notify('ERROR: file appears truncated')
 
@@ -1273,6 +1272,7 @@ def main():
         sys.exit(1)
 
     ### download data (http, https, ftp, sftp) or not
+    infoonly = False
     if options.source.startswith('http://') or options.source.startswith('https://'):
         files = get_list(options.source)
         if files == None:
@@ -1299,8 +1299,9 @@ def main():
         for key in sorted(db):
             row = db[key]
             notify('%s created on %s [%s]' % (key,row['timestamp'],row['md5sum']))
-        return
+        return    
     else:            
+        infoonly = True
         conversion_path = options.source
 
     ### if options.source = 'gauge.cold.TxXxYxZ' make it
@@ -1315,8 +1316,9 @@ def main():
         precision = 'f' if options.float_precision else \
             'd' if options.double_precision else None
         universal_converter(conversion_path,options.convert,precision)
-    else:
-        universal_converter(conversion_path,options.convert,precision=None,convert=False)
+    elif infoonly:
+        universal_converter(conversion_path,options.convert,
+                            precision=None,convert=False)
 
 
 if __name__ == '__main__': main()
