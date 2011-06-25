@@ -1156,7 +1156,7 @@ def download(files,target_folder,options):
             notify('skipping file %s (already present)' % basename)
         else:
             input = None
-            widgets = [basename, ' ',Percentage(), ' ', Bar(marker = '>'),' ',
+            widgets = [basename, ' ',Percentage(), ' ', Bar(marker = '#'),' ',
                        ETA(), ' ', FileTransferSpeed()]
             while not input:
                 notify('downloading %s' % basename)
