@@ -31,6 +31,7 @@ Examples:
 ##### imports #############################################################
 
 import urllib
+import urllib2
 import hashlib
 import cPickle
 import os
@@ -1141,12 +1142,12 @@ def md5_for_large_file(filename, block_size = 2**20):
 def get_list(url):
     try:
         json = urllib.urlopen(url).read()
-        files = eval(json)['files']
-        return files
+        data = eval(json)
+        return data
     except:
         return None
 
-def download(files,target_folder,options):
+def download(token,files,target_folder,options):
     notify('total files to download: %s' % len(files))
     for k,f in enumerate(files):
         path = f['filename']
@@ -1161,7 +1162,8 @@ def download(files,target_folder,options):
             while not input:
                 notify('downloading %s' % basename)
                 try:
-                    input = urllib.urlopen(f['link'])
+                    req = urllib2.Request(f['link'],headers=dict(token=token))
+                    input = urllib2.urlopen(req)
                 except IOError:
                     notify('failure to download %s' % f['link'])
                     sys.exit(1)
@@ -1274,8 +1276,8 @@ def main():
     ### download data (http, https, ftp, sftp) or not
     infoonly = False
     if options.source.startswith('http://') or options.source.startswith('https://'):
-        files = get_list(options.source)
-        if files == None:
+        data = get_list(options.source)
+        if not data:
             notify('unable to connect')
             sys.exit(0)
         else:
@@ -1286,7 +1288,7 @@ def main():
             notify('target folder:',target_folder)
             if not os.path.exists(target_folder):
                 os.mkdir(target_folder)
-            download(files,target_folder,options)
+            download(data['token'],data['files'],target_folder,options)
         conversion_path = os.path.join(target_folder,pattern.replace('nnnnn','*'))
     elif options.source.startswith('ftp://') or options.source.startswith('sftp://'):
         username = raw_input('username:')
