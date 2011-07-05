@@ -644,7 +644,7 @@ class GaugeSCIDAC(QCDFormat):
         return self.unpack(data)
 
 
-class PropagatorSCIDAC(QCDFormat):
+class PropagatorSCIDAC(GaugeSCIDAC):
     is_gauge = False
     def __init__(self,filename):
         self.filename = filename
