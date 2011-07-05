@@ -36,7 +36,11 @@ Examples:
 
    visvtk -i 9 folder/*.vtk
 
-5) render a vtk file as a jpeg image
+tricubic Resample/Interpolate individual vtk files
+
+   visit -v 10x10x10 folder/*.vtk 
+
+6) render a vtk file as a jpeg image
 
    visvtk -p 'AnnotationAttributes[axes3D.bboxFlag=0];ResampleAttributes[samplesX=160;samplesY=160;samplesZ=160];ContourAttributes[SetMultiColor(9,$orange)]' 'folder/*.vtk'
 
@@ -76,18 +80,6 @@ Images from interpolated slices:
 You can use streampclip to turn the jpegs into a movie
 """
 
-HEAD = """# vtk DataFile Version 2.0
-%(filename)s
-BINARY
-DATASET STRUCTURED_POINTS
-DIMENSIONS %(x)s %(y)s %(z)s
-ORIGIN     0   0   0
-SPACING    1   1   1
-POINT_DATA %(volume)s
-SCALARS %(field)s float
-LOOKUP_TABLE default
-"""
-
 # reasonable defaults
 
 DEFAULTS = {
@@ -106,6 +98,197 @@ def notify(*a):
     """
     print ' '.join(str(x) for x in a)
 
+
+
+HEAD = """# vtk DataFile Version 2.0
+%s
+BINARY
+DATASET STRUCTURED_POINTS
+DIMENSIONS %s %s %s
+ORIGIN     %s %s %s
+SPACING    %s %s %s
+POINT_DATA %s
+SCALARS %s float
+LOOKUP_TABLE default
+"""
+
+class VTK(object):
+    def __init__(self,filename,mode):
+        if mode[0]=='w':
+            notify('writing %s ...' % filename)
+        self.filename = filename
+        self.mode = mode
+        self.file = open(filename,mode)
+    def read_header(self):
+        header = ''
+        while True:
+            header +=  self.file.read(1)
+            if len(header)>10000:
+                raise "%s does not look like a vtk file" % self.filename
+            if header.endswith('LOOKUP_TABLE default\n'):
+                break
+        lines = header.strip().split('\n')
+        header_dict = dict(line.strip().split(None,1) for line in lines[3:])
+        header_dict['FILENAME']=lines[1].strip()
+        header_dict['DIMENSIONS']=[int(x) for x in header_dict['DIMENSIONS'].split()]
+        header_dict['ORIGIN']=[int(x) for x in header_dict['ORIGIN'].split()]
+        header_dict['SPACING']=[int(x) for x in header_dict['SPACING'].split()]
+        header_dict['POINT_DATA']=int(header_dict['POINT_DATA'])
+        header_dict['SCALARS']=header_dict['SCALARS'].split()[0]
+        self.size = header_dict['DIMENSIONS']
+        return header_dict    
+    def write_header(self,header_dict):
+        if not 'FILENAME' in header_dict: header_dict['FILENAME'] = self.filename
+        if not 'ORIGIN' in header_dict:   header_dict['ORIGIN'] = (0,0,0)
+        if not 'SPACING' in header_dict:  header_dict['SPACING'] = (1,1,1)
+        self.size = header_dict['DIMENSIONS']        
+        header_dict['POINT_DATA'] = self.size[0]*self.size[1]*self.size[2]
+        if not 'SCALARS' in header_dict: header_dict['SCALARS'] = 'slice'
+        header= HEAD % \
+            (header_dict['FILENAME'],
+             header_dict['DIMENSIONS'][0],
+             header_dict['DIMENSIONS'][1],
+             header_dict['DIMENSIONS'][2],
+             header_dict['ORIGIN'][0],
+             header_dict['ORIGIN'][1],
+             header_dict['ORIGIN'][2],
+             header_dict['SPACING'][0],
+             header_dict['SPACING'][1],
+             header_dict['SPACING'][2],
+             header_dict['POINT_DATA'],
+             header_dict['SCALARS'])
+        self.file.write(header)
+    def read_partial_header(self):
+        header = ''
+        while True:
+            c = self.file.read(1)
+            if not c or len(c)>1000:
+                return dict() # error reading header
+            header += c            
+            if header.endswith('LOOKUP_TABLE default\n'):
+                break
+        lines = header.strip().split('\n')
+        header_dict = dict(line.strip().split(None,1) for line in lines)
+        header_dict['SCALARS']=header_dict['SCALARS'].split()[0]
+        return header_dict        
+    def write_partial_header(self,header_dict):
+        header= """\nSCALARS %s float\nLOOKUP_TABLE default\n""" % \
+            (header_dict['SCALARS'])
+        self.file.write(header)
+    def read_data(self,serial=False):
+        data = []
+        if serial:
+            for i in range(self.size[0]*self.size[1]*self.size[2]):
+                f = struct.unpack('>f',self.file.read(4))[0]
+                data.append(f)
+            return data
+        rx = range(self.size[0])
+        ry = range(self.size[1])
+        rz = range(self.size[2])
+        for x in rx:
+            ydata = []
+            for y in ry:
+                zdata = []
+                for z in rz:
+                    f = struct.unpack('>f',self.file.read(4))[0]
+                    zdata.append(f)
+                ydata.append(zdata)
+            data.append(ydata)
+        return data
+    def write_data(self,data,serial=False):
+        if serial:
+            for i in range(self.size[0]*self.size[1]*self.size[2]):
+                self.file.write(struct.pack('>f',data[i]))
+            return
+        rx = range(self.size[0])
+        ry = range(self.size[1])
+        rz = range(self.size[2])
+        for x in rx:
+            ydata = data[x]
+            for y in ry:
+                zdata = ydata[y]
+                for z in rz:
+                    self.file.write(struct.pack('>f',zdata[z]))
+
+class CubicInterpolator(object):
+    def __init__(self,data,nx,ny,nz):
+        self.data = data
+        self.nx=nx
+        self.ny=ny
+        self.nz=nz
+        self.ox=len(data)
+        self.oy=len(data[0])
+        self.oz=len(data[0][0])
+    def resample(self):
+        rx = range(self.nx)
+        ry = range(self.ny)
+        rz = range(self.nz)
+        data = []
+        for x in rx:
+            ydata = []
+            for y in ry:
+                zdata = []
+                for z in ry:
+                    p = self.interpolate(x,y,z)
+                    zdata.append(p)
+                ydata.append(zdata)
+            data.append(ydata)
+        return data
+    @staticmethod
+    def cint(x,a,b,c,d):
+        x = float(x)
+        x2 = x*x
+        a0 = d - c - a + b
+        a1 = a - b - a0
+        a2 = c - a
+        a3 = b
+        return x*x2*a0+x2*a1+x*a2+a3
+    def interpolate(self,x,y,z):
+        xx = float(self.ox*x)/self.nx
+        x0 = int(xx)
+        return self.cint(xx-x0,
+                         self.u(x0-1,y,z),
+                         self.u(x0+0,y,z),
+                         self.u(x0+1,y,z),
+                         self.u(x0+2,y,z))
+    def u(self,x0,y,z):
+        yy = float(self.oy*y)/self.ny
+        y0 = int(yy)
+        return self.cint(yy-y0,
+                        self.t(x0,y0-1,z),
+                        self.t(x0,y0+0,z),
+                        self.t(x0,y0+1,z),
+                        self.t(x0,y0+2,z))
+    def t(self,x0,y0,z):
+        zz = float(self.oz*z)/self.nz
+        z0 = int(zz)
+        return self.cint(zz-z0,
+                        self.r(x0,y0,z0-1),
+                        self.r(x0,y0,z0+0),
+                        self.r(x0,y0,z0+1),
+                        self.r(x0,y0,z0+2))
+    def r(self,x0,y0,z0):
+        x = (x0+self.ox) % self.ox
+        y = (y0+self.oy) % self.oy
+        z = (z0+self.oz) % self.oz
+        return self.data[x][y][z]
+    
+    @staticmethod
+    def test():
+        """
+        >>> CubicInterpolator.test()
+        passed
+        """
+        rn = range(20)
+        data = [[[math.sin(float(x)/70)* \
+                  math.cos(float(y)/50)* \
+                  math.cos(float(z)/100) \
+                      for x in rn] for y in rn] for z in rn]
+        c = CubicInterpolator(data,100,100,100)
+        assert repr(c.interpolate(52,52,52)) == '0.14468741265934257'
+        assert repr(data[10][10][10]) == '0.13883668632581025'
+        print 'passed'
+
 def analysis(filename):
     """
     reads a filename and returns {'name':...,'minimum':...','maximum':...,'iso':...}
@@ -113,15 +296,16 @@ def analysis(filename):
     minimum and maximum and the extreme values of the fiels
     iso if a list of two suggested iso-surface threshold values so that blobs occupy 30% of volume
     """
-    data = open(filename,'rb').read()
-    header, data = data.split('LOOKUP_TABLE default\n')
-    name = re.compile('SCALARS (?P<name>\w+)').search(header).group('name')
-    volume = int(re.compile('POINT_DATA (?P<volume>\d+)').search(header).group('volume'))
-    np = max(1,10000/volume)
-    minimum,maximum = None,None
+    vtk = VTK(filename,'rb')
+    header = vtk.read_header()
+    name = header['FILENAME']
     points = []
-    for i in xrange(volume):
-        p = struct.unpack('>f',data[4*i:4*i+4])[0]
+    minimum = None
+    maximum = None
+    data = vtk.read_data(serial=True)
+    np = 100
+    for i in range(len(data)):
+        p = data[i]
         if minimum==None or p<minimum:
             minimum = p
             points.append(p)
@@ -129,7 +313,7 @@ def analysis(filename):
             maximum = p
             points.append(p)
         if i%np==0:
-            points.append(p)
+            points.append(p)            
     points.sort()
     if maximum*minimum>=0 and maximum>0:
         return dict(name=name,maximum=maximum,minimum=minimum,
@@ -141,52 +325,56 @@ def analysis(filename):
         return dict(name=name,maximum=maximum,minimum=minimum,
                     iso=(points[int(len(points)/6)], -points[int(len(points)/6)]))
 
-def makevtk(filename,size=10):
+def makevtk(filename,size=10,slices=10):
     """
     make a dummy filename of size^3 (1000 points by default)
     """
-    file = open(filename,'wb')
-    d = dict(filename = os.path.basename(filename),x=size,y=size,z=size,volume=size**3,field='slice')
-    file.write(HEAD % d)
-    nr = range(size)
-    half = float(size)/2
-    for x in nr:
-        for y in nr:
-            for z in nr:
-                field = 1.0/math.sqrt(0.001+(half-x)**2+(half-y)**2+(half-z)**2)
-                file.write(struct.pack('>f',field))
+    vtk = VTK(filename,'wb')
+    for slice in range(slices):
+        header = dict(DIMENSIONS=(size,size,size),SCALARS='slice%s'%slice)
+        if slice==0:
+            vtk.write_header(header)
+        else:
+            vtk.write_partial_header(header)
+        data = []
+        nr = range(size)
+        half = float(size)/2
+        for x in nr:
+            ydata = []
+            for y in nr:
+                zdata = []
+                for z in nr:
+                    p = 1.0/math.sqrt(0.001+(half-x)**2+(half-y)**2+(half-z)**2)
+                    zdata.append(p)
+                ydata.append(zdata)
+            data.append(ydata)
+        vtk.write_data(data)
+    notify('done')
 
 def split(filename,pattern):
     """
     takes a binary vtk file containing many scalars and splits it into many vtk files with a single scalar
     """
-    regex_header = re.compile('.*LOOKUP_TABLE .*?\n$',re.DOTALL)
-    regex = re.compile(fnmatch.translate('SCALARS '+pattern+' float'))
-    file=open(filename,'rb')
-    header=''
-    i =0 
-    filenames = []
-    header = ''
+    ivtk = VTK(filename,'rb')
+    header = None
+    i = 0 
+    workfiles = []
     while True:
-        header = '\n'.join(header.split('\n')[:-3])
-        while True:
-            c=file.read(1)
-            if len(c)<1:
-                i=-1
+        if not header:
+            header = ivtk.read_header()
+        else:
+            partial_header = ivtk.read_partial_header()
+            if not partial_header:
                 break
-            header+=c
-            if regex_header.match(header):
-                break
-        if i<0: break
-        header = re.compile('SCALARS .*? float').sub('SCALARS slice float',header)
-        size = int(re.compile('POINT_DATA (?P<size>\d+)').search(header).group('size'))*4
-        data = file.read(size)
-        newfilename=filename.rsplit('.')[0]+'.%.4i0000.vtk' % i
-        notify('writing...',newfilename)
-        open(newfilename,'wb').write(header+data)
-        filenames.append(newfilename)
+        data = ivtk.read_data()
+        newfilename=filename.rsplit('.')[0]+'.%.4i0000.vtk' % i        
+        ovtk = VTK(newfilename,'wb')
+        header['SCALARS']='slice'
+        ovtk.write_header(header)
+        ovtk.write_data(data)
+        workfiles.append(newfilename)
         i+=1        
-    return filenames
+    return workfiles
 
 def interpolate_couple(filename1, filename2, frames=1):
     """
@@ -195,28 +383,23 @@ def interpolate_couple(filename1, filename2, frames=1):
     """
     if filename1[-6:-4]!='00': raise RuntimeError, "filename must end in 00.vtk"
     if filename2[-6:-4]!='00': raise RuntimeError, "filename must end in 00.vtk"
-    file1=open(filename1,'rb')
-    file2=open(filename2,'rb')
-    header=''
-    while True:
-        c=file1.read(1)
-        if len(c)<1: sys.exit(0)
-        header+=c
-        if header.endswith('LOOKUP_TABLE default\n'): break    
-    size = int(re.compile('POINT_DATA (?P<size>\d+)').search(header).group('size'))
-    data1 = file1.read(size*4)
-    file2.seek(len(header))
-    data2 = file2.read(size*4)
-    points1 = struct.unpack('>%if' % size, data1)
-    points2 = struct.unpack('>%if' % size, data2)
+    vtk1 = VTK(filename1,'rb')
+    vtk2 = VTK(filename2,'rb')
+    header1 = vtk1.read_header()
+    header2 = vtk2.read_header()
+    if vtk1.size!=vtk2.size:
+        raise "incompatible file sizes %s %s" % (filename1, filename2)
+    points1 = vtk1.read_data(serial=True)
+    points2 = vtk2.read_data(serial=True)
+    size = vtk1.size[0]*vtk1.size[1]*vtk1.size[2]
     workfiles = []
     for i  in range(1,frames+1):
         h = 1.0/(frames+1)
         points3 = [h*(frames+1-i)*points1[j]+h*i*points2[j] for j in range(size)]    
-        data3 = struct.pack('>%if' % size, *points3)
         filename = '%s%.2i.vtk' % (filename1[:-6],i)
-        notify('writing...',filename)
-        open(filename,'wb').write(header+data3)
+        ovtk = VTK(filename,'wb')
+        ovtk.write_header(header1)
+        ovtk.write_data(points3,serial=True)
         workfiles.append(filename)
     return workfiles
 
@@ -225,10 +408,27 @@ def interpolate(filenames, nframes):
     loops over all filenames and interpolates each couple of them
     """
     filenames.sort()
-    workfiles = filenames
+    workfiles = filenames    
     for i in range(1,len(filenames)):
         workfiles += interpolate_couple(filenames[i-1],filenames[i],nframes)
-        workfiles.append(filenames[i])
+    workfiles.sort()
+    return workfiles
+
+def resample(files,cubic='10x10x10'):
+    if not cubic: return files
+    size = [int(x) for x in cubic.split('x')]
+    workfiles = []
+    for filename in files:
+        newfile=filename[:-4]+'.'+cubic+'.vtk'
+        ivtk = VTK(filename,'rb')        
+        header = ivtk.read_header()
+        data = ivtk.read_data()
+        newdata = CubicInterpolator(data,*size).resample()
+        header['DIMENSIONS'] = size
+        ovtk = VTK(newfile,'wb')
+        ovtk.write_header(header)
+        ovtk.write_data(newdata)
+        workfiles.append(newfile)
     return workfiles
 
 def fix_variables(text):
@@ -325,6 +525,11 @@ def main():
                       default='',
                       dest='interpolate',
                       help='name of the vtk files to add/interpolate')
+    parser.add_option('-c',
+                      '--cubic-interpolate',
+                      default=None,
+                      dest='cubic',
+                      help='new size for the lattice 10x10x10')
     parser.add_option('-m',
                       '--make',
                       default=None,
@@ -352,6 +557,8 @@ def main():
     pattern = options.read or options.split or '*'
     if options.interpolate:
         workfiles = interpolate(workfiles,int(options.interpolate))
+    if options.cubic:
+        workfiles = resample(workfiles,options.cubic)
     if options.pipeline:
         workfiles.sort()
         plot(workfiles,options.pipeline)

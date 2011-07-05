@@ -387,8 +387,8 @@ class GaugeMDPSplit(GaugeMDP):
         notify('  (precision: %s, size: %ix%ix%ix%i)' % (precision,nt,nx,ny,nz))
         pbar = ProgressBar(widgets = default_widgets , maxval = nt).start()
         for t in xrange(nt):
-            slice = GaugeMDP(self.filename.replace('split.prop.mdp',
-                                                   't%.4i.prop.mdp' % t))
+            slice = GaugeMDP(self.filename.replace('split.mdp',
+                                                   't%.4i.mdp' % t))
             slice.write_header(target_precision or precision,1,nx,ny,nz)
             for x in xrange(nx):
                 for y in xrange(ny):
@@ -494,7 +494,8 @@ class PropagatorMDPSplit(QCDFormat):
         notify('  (precision: %s, size: %ix%ix%ix%i)' % (precision,nt,nx,ny,nz))
         pbar = ProgressBar(widgets = default_widgets , maxval = nt).start()
         for t in xrange(nt):
-            slice = PropagatorMDP(self.filename.replace('.split.mdp','.t%.4i.mdp' % t))
+            slice = PropagatorMDP(self.filename.replace('.split.prop.mdp',
+                                                        '.t%.4i.prop.mdp' % t))
             slice.write_header(target_precision or precision,1,nx,ny,nz)
             for x in xrange(nx):
                 for y in xrange(ny):
