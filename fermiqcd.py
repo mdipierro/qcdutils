@@ -61,6 +61,8 @@ def get_options(path):
     regex = re.compile('have\("(.*?)"\)')
     for item in regex.findall(data):
         d[item]=d.get(item,[])
+        if not item in options:
+           options.append(item)
     for key in options:
         print '    %s' % key
         done = set()
