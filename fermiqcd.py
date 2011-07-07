@@ -73,7 +73,10 @@ def get_options(path):
 
 def get_fermiqcd(path,download=False,compile=False,mpi=False):
     path = os.path.join(path,'.fermiqcd')
-    exe = os.path.join(path,'fermiqcd.exe')
+    if mpi:
+        exe = os.path.join(path,'fermiqcd-mpi.exe')
+    else:
+        exe = os.path.join(path,'fermiqcd.exe')
     if download or not os.path.exists(exe):
         if not os.path.exists(path):
             os.mkdir(path)        
@@ -91,7 +94,7 @@ def get_fermiqcd(path,download=False,compile=False,mpi=False):
             if os.system('mpiCC')!=256:
                 print 'mpiCC command not found on your system'
                 sys.exit(1)
-            command = 'mpiCC -lmpi -DPARALLEL -O3 -o fermiqcd.exe fermiqcd.cpp'
+            command = 'mpiCC -lmpi -DPARALLEL -O3 -o fermiqcd-mpi.exe fermiqcd.cpp'
         else:
             if os.system('g++')!=256:
                 print 'g++ command not found on your system'
