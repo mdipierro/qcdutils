@@ -355,6 +355,7 @@ def split(filename,pattern):
     """
     takes a binary vtk file containing many scalars and splits it into many vtk files with a single scalar
     """
+    regex = re.compile(pattern)
     ivtk = VTK(filename,'rb')
     header = None
     i = 0 
@@ -367,13 +368,14 @@ def split(filename,pattern):
             if not partial_header:
                 break
         data = ivtk.read_data()
-        newfilename=filename.rsplit('.')[0]+'.%.4i0000.vtk' % i        
-        ovtk = VTK(newfilename,'wb')
-        header['SCALARS']='slice'
-        ovtk.write_header(header)
-        ovtk.write_data(data)
-        workfiles.append(newfilename)
-        i+=1        
+        if regex.match(header['SCALARS']):
+            newfilename=filename.rsplit('.')[0]+'.%.4i0000.vtk' % i        
+            ovtk = VTK(newfilename,'wb')
+            header['SCALARS']='slice'
+            ovtk.write_header(header)
+            ovtk.write_data(data)
+            workfiles.append(newfilename)
+            i+=1
     return workfiles
 
 def interpolate_couple(filename1, filename2, frames=1):
