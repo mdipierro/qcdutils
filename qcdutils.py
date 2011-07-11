@@ -1145,7 +1145,8 @@ def get_list(url):
         json = urllib.urlopen(url).read()
         data = eval(json)
         return data
-    except:
+    except Exception,e:
+        notify('ERROR: %s' % e)
         return None
 
 def download(token,files,target_folder,options):
