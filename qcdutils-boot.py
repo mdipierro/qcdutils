@@ -2,13 +2,13 @@ import sys, re, copy, random, glob, csv
 from optparse import *
 from math import *
 
-usage = "ibootstrap.py *.log 'x[<a>]/y[<b>]' 'abs(a-b)==1'\n" \
+usage = "qcdutils-boot.py *.log 'x[<a>]/y[<b>]' 'abs(a-b)==1'\n" \
     "  scans all files *.log for expressions of the form\n" \
     "    x[<a>]=<value> and y[<b>]=<value>\n" \
     "  and computes the average and bootstrap errors of x[<a>]/y[<b>]\n" \
     "  where <a> and <b> satisfy the condition abs(a-b)==1.\n"
 
-version = "iboostrap v1.0\n" \
+version = "qcdutils-boot v1.0\n" \
     "  Copyright (c) 2007 Massimo Di Pierro\n" \
     "  All rights reserved\n" \
     "  License: GPL 2.0\n\n" \

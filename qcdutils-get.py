@@ -17,14 +17,14 @@ For the latest source and documentation: http://code.google.com/p/qcdutils/
 USAGE ="""
 Usage:
 
-    qcdutils.py [options] sources
+    qcdutils-get.py [options] sources
 
 Examples:
 
-    qcdutils.py --test
-    qcdutils.py --convert ildg gauge.cold.12x8x8x8
-    qcdutils.py --convert mdp --float *.ildg
-    qcdutlls.py --convert split.mdp *.mdp
+    qcdutils-get.py --test
+    qcdutils-get.py --convert ildg gauge.cold.12x8x8x8
+    qcdutils-get.py --convert mdp --float *.ildg
+    qcdutils-get.py --convert split.mdp *.mdp
 
 """
 

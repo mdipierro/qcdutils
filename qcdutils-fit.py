@@ -3,15 +3,15 @@ import re, random, copy, sys, csv
 from optparse import *
 
 usage = \
-    "ifit.py [OPTIONS] 'expression@values'\n" \
-    "  Example: ifit 'a*x+b@a=3,b=0'\n" \
+    "qcdutils-fit.py [OPTIONS] 'expression@values'\n" \
+    "  Example: qcdutils-fit.py 'a*x+b@a=3,b=0'\n" \
     "  default filename is ibootstrap_min_mean_max.csv\n" \
     "  ...., 'x', 'min', 'mean', 'max'\n" \
     "  ...., 23, 10, 11, 12\n" \
     "  ...., etc etc etc\n"
 
 version = \
-    "ifit v1.0\n" \
+    "qcdutils-fit v1.0\n" \
     "  Copyright (c) 2007 Massimo Di Pierro\n" \
     "  All rights reserved\n" \
     "  License: GPL 2.0\n\n" \

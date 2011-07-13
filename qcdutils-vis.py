@@ -21,20 +21,20 @@ Examples:
 
 1) make a dummy vtk file
 
-   visvtk -m 10 folder/test.vtk
+   qcdutils-vis.py -m 10 folder/test.vtk
 
 2) reads fields from multiple vtk files
 
-   visvtk -r field folder/*.vtk
+   qcdutils-vis.py -r field folder/*.vtk
 
 3) extract fields as multiple files
 
-   visvtk -s field folder/*.vtk
+   qcdutils-vis.py -s field folder/*.vtk
 
 (fields in files will be renamed as "slice")
 4) interpolate vtk files
 
-   visvtk -i 9 folder/*.vtk
+   qcdutils-vis.py -i 9 folder/*.vtk
 
 tricubic Resample/Interpolate individual vtk files
 
@@ -42,7 +42,7 @@ tricubic Resample/Interpolate individual vtk files
 
 6) render a vtk file as a jpeg image
 
-   visvtk -p 'AnnotationAttributes[axes3D.bboxFlag=0];ResampleAttributes[samplesX=160;samplesY=160;samplesZ=160];ContourAttributes[SetMultiColor(9,$orange)]' 'folder/*.vtk'
+   qcdutils-vis.py -p 'AnnotationAttributes[axes3D.bboxFlag=0];ResampleAttributes[samplesX=160;samplesY=160;samplesZ=160];ContourAttributes[SetMultiColor(9,$orange)]' 'folder/*.vtk'
 
 Filename convetions
 ===================
@@ -447,7 +447,7 @@ def plot(workfiles,pipeline,format='jpeg',tmpfile=None):
     as it loops over files, it rotates the image
     """
     if not tmpfile:
-        tmpfile = 'visvtk_%s.py' % uuid.uuid4()
+        tmpfile = 'qcdutils_vis_%s.py' % uuid.uuid4()
     res = analysis(workfiles[int(len(workfiles)/2)])
     res['tmpfile'] = tmpfile[:-3]
     file = open(tmpfile,'w')
