@@ -4,8 +4,8 @@ import re, urllib, csv, math
 
 usage = "python qcdutils_plot.py\n" \
 
-version = "qcdutils_plotv1.0\n" \
-          "  Copyright (c) 2007 Massimo Di Pierro\n" \
+version = "qcdutils_plotv 1.0\n" \
+          "  Copyright (c) 2011 Massimo Di Pierro\n" \
 	  "  All rights reserved\n" \
           "  License: GPL 2.0\n\n" \
 	  "  Written by Massimo Di Pierro <mdipierro@cs.depaul.edu>\n"

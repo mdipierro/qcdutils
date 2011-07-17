@@ -3,7 +3,7 @@ import re, random, copy, sys, csv
 from optparse import *
 
 usage = \
-    "qcdutils-fit.py [OPTIONS] 'expression@values'\n" \
+    "qcdutils_fit.py [OPTIONS] 'expression@values'\n" \
     "  Example: qcdutils-fit.py 'a*x+b@a=3,b=0'\n" \
     "  default filename is ibootstrap_min_mean_max.csv\n" \
     "  ...., 'x', 'min', 'mean', 'max'\n" \
@@ -11,8 +11,8 @@ usage = \
     "  ...., etc etc etc\n"
 
 version = \
-    "qcdutils-fit v1.0\n" \
-    "  Copyright (c) 2007 Massimo Di Pierro\n" \
+    "qcdutils_fit v1.0\n" \
+    "  Copyright (c) 2011 Massimo Di Pierro\n" \
     "  All rights reserved\n" \
     "  License: GPL 2.0\n\n" \
     "  Written by Massimo Di Pierro <mdipierro@cs.depaul.edu>\n"
