@@ -1,5 +1,5 @@
 from optparse import *
-from qcdutils_mpl import plot, hist
+from qcdutils_mpl import plot, hist, qqplot
 import re, urllib, csv, math
 
 usage = "python qcdutils_plot.py\n" \
@@ -44,6 +44,10 @@ class IPlot:
             print filename2
             hist(data = items[1:],
                  xlab=tag,ylab='frequency',filename = filename2)            
+            filename2 = filename[:-4]+'_%s_qq.png' % clean(tag)
+            print filename2
+            qqplot(data = items[1:],
+                   xlab='gaussian',ylab=tag,filename = filename2)            
             # mu=E(lambda x:x,data)
             # sd=math.sqrt(E(lambda x:(x-mu)**2,data))
 

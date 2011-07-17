@@ -23,7 +23,7 @@ def save_figure(figure,filename):
         except: pass
         return filename
 
-def hist(title='title',xlab='x',ylab='y',nbins=20,
+def hist(title='',xlab='x',ylab='y',nbins=20,
          data=[1,2,3,3,4,5,5,6,7,7,8,2,3,4,3,4,6],
          filename='image.png',gaussian_fit=True):
     figure=Figure(frameon=True)
@@ -43,9 +43,9 @@ def hist(title='title',xlab='x',ylab='y',nbins=20,
         axes.plot(x,y,linewidth="2",color="r")
     return save_figure(figure,filename)
 
-def qq(title='title',xlab='x',ylab='y',nbins=20,
-       data=[1,2,3,3,4,5,5,6,7,7,8,2,3,4,3,4,6],
-       filename='image.png'):
+def qqplot(title='',xlab='x',ylab='y',nbins=20,
+           data=[1,2,3,3,4,5,5,6,7,7,8,2,3,4,3,4,6],
+           filename='image.png'):
     figure=Figure(frameon=True)
     figure.set_facecolor('white')
     axes=figure.add_subplot(111)
@@ -61,13 +61,14 @@ def qq(title='title',xlab='x',ylab='y',nbins=20,
     cdf1, cdf2 = [0.0], [0.0]
     for x in y:
         cdf1.append(cdf1[-1]+x)
-        cdf2.append(0.5-math.erf((x-mu)/sd)/2)
-    axes.plot(cd1,cd2,fmt='o', linewidth="0")
+        #cdf1.append(0.5-math.erf((x-mu)/sd)/2)
+        cdf2.append(cdf1[-1]+x)
+    axes.plot(cdf1,cdf2,linewidth="0")
     extremes=[cdf2[0],cdf2[-1]]
     axes.plot(extremes,extremes,linewidth="1")
     return save_figure(figure,filename)
 
-def plot(title='title',xlab='x',ylab='y',
+def plot(title='',xlab='x',ylab='y',
          data={'xxx':[(0,0),(1,1),(1,2),(3,3)],
                'yyy':[(0,0,.2),(2,1,0.2),(2,2,0.2),(3,3,0.2)]},
          filename='image.png'):
@@ -93,7 +94,7 @@ def plot(title='title',xlab='x',ylab='y',
             ell=axes.plot(x, y, linewidth="2")
     return save_figure(figure,filename)
 
-def color2d(title='title',xlab='x',ylab='y',
+def color2d(title='',xlab='x',ylab='y',
             data=[[1,2,3,4],[2,3,4,5],[3,4,5,6],[4,5,6,7]],
             filename='image.png'):
     figure=Figure(frameon=True)
@@ -106,7 +107,7 @@ def color2d(title='title',xlab='x',ylab='y',
     image.set_interpolation('bilinear')
     return save_figure(figure,filename)
 
-def scatter(title='title',xlab='x',ylab='y',
+def scatter(title='',xlab='x',ylab='y',
             data=None,filename='image.png'):
     if data==None:
         r=random.random
