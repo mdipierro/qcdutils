@@ -193,7 +193,11 @@ class IFit:
 	    variables[key1]-=delta
             df[i]=(f_plus-f_minus)/(two_delta)            
             i+=1
-	H=invert_squared_matrix(hessian)                
+        try:
+            H=invert_squared_matrix(hessian)                
+        except:
+            self.errors.append("unable to invert hessian, possibly wrong variables")
+            raise IFitException
 	sum_shift=0.0
         i=0
         for key1 in keys:
