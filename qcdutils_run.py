@@ -12,7 +12,7 @@ When you run:
     python qcdutils-run.py [args]
  
 It will:
-- create a folder called .fermiqcd/ in the current working directory
+- create a folder called fermiqcd/ in the current working directory
 - connect to google code and download fermiqcd.cpp + required libraries
 - if -mpi in [args] compile fermiqcd with mpiCC else with g++
 - if -mpi in [args] run fermiqcd.exe with mpiCC else run it normally
@@ -21,6 +21,7 @@ It will:
 Some [args] are handled by qcdutils-run.py:
 -download force downloading of the libraries
 -compile  force recompiling of code
+-source   runs and compiles a different source file
 -mpi      for use with mpi (mpiCC and mpirun but be installed)
 
 Other [args] are handled by fermiqcd.cpp for example
@@ -30,7 +31,7 @@ Other [args] are handled by fermiqcd.cpp for example
 -pion     make a pion
 (run it with no options for a longer list of options)
 
-You can find the source code in .fermiqcd/fermiqcd.cpp
+You can find the source code in fermiqcd/fermiqcd.cpp
 
 More examples:
     qcdutils-run.py -gauge:start=cold:nt=16:nx=4
@@ -73,13 +74,15 @@ def get_options(path):
                 print '        %s = %s' % (a,b)
                 done.add(a)
 
-def get_fermiqcd(path,download=False,compile=False,mpi=False):
-    path = os.path.join(path,'.fermiqcd')
+def get_fermiqcd(path,download=False,compile=False,mpi=False,
+                 source='fermiqcd/fermiqcd.cpp'):
+    path = os.path.join(path,os.path.dirname(source))
+    filename = os.path.basename(source).split('.')[0]
     if mpi:
-        exe = os.path.join(path,'fermiqcd-mpi.exe')
+        exe = os.path.join(path,'%s-mpi.exe' % filename)
     else:
-        exe = os.path.join(path,'fermiqcd.exe')
-    if download or not os.path.exists(exe):
+        exe = os.path.join(path,'%s.exe' % filename)
+    if download or not os.path.exists(path):
         if not os.path.exists(path):
             os.mkdir(path)        
         print 'downloading %s' % FERMIQCD
@@ -88,6 +91,7 @@ def get_fermiqcd(path,download=False,compile=False,mpi=False):
             print 'downloading %s' % (FERMIQCD+f)
             data = urllib.urlopen(FERMIQCD+f).read()
             open(os.path.join(path,f),'wb').write(data)
+    if not os.path.exists(exe):
         compile = True
     if compile:
         dir = os.getcwd()
@@ -96,12 +100,12 @@ def get_fermiqcd(path,download=False,compile=False,mpi=False):
             if os.system('mpiCC')!=256:
                 print 'mpiCC command not found on your system'
                 sys.exit(1)
-            command = 'mpiCC -lmpi -DPARALLEL -O3 -o fermiqcd-mpi.exe fermiqcd.cpp'
+            command = 'mpiCC -lmpi -DPARALLEL -O3 -o %s-mpi.exe %s.cpp' % (filename,filename)
         else:
             if os.system('g++')!=256:
                 print 'g++ command not found on your system'
                 sys.exit(1)
-            command = 'g++ -O3 -o fermiqcd.exe fermiqcd.cpp'
+            command = 'g++ -O3 -o %s.exe %s.cpp' % (filename, filename)
         print 'compiling....'        
         print command
         if os.system(command):
@@ -112,15 +116,17 @@ def get_fermiqcd(path,download=False,compile=False,mpi=False):
     return exe
 
 def main():
-    ignore = ['-download','-compile','-mpi','-h']
+    ignore = ['-download','-compile','-mpi','-source','-h']
     if '-h' in sys.argv:
         print USAGE
-        get_options('.fermiqcd/')
+        get_options('fermiqcd/')
     else:
-        path = get_fermiqcd('./',
+        source = ([x[8:] for x in sys.argv if x.startswith('-source:')]+['fermiqcd/fermiqcd'])[0]
+        path = get_fermiqcd(os.getcwd(),
                             download='-download' in sys.argv,
                             compile='-compile' in sys.argv,
-                            mpi='-mpi' in sys.argv)
+                            mpi='-mpi' in sys.argv,
+                            source=source)
         if '-options' in sys.argv:
             get_options(path)
         else:            
