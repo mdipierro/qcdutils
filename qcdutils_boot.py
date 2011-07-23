@@ -29,7 +29,8 @@ class IBootstrap:
         # indices is ignored by ibootstrap but has to be here 
         # becase of the design of iplotwx.py
         self.expression=re.sub('(\"|\<|\>)','',expression)
-        if condition!='True': self.expression+=' where '+condition
+        if condition!='True':
+            self.expression+=' @ '+condition.replace('==','=')
 	self.report=[]
         self.import_module=import_module
         self.indices=indices
@@ -49,7 +50,7 @@ class IBootstrap:
             self.log_trails(output_prefix+'_trails.csv')
 	    self.log_samples(output_prefix+'_samples.csv')
             self.log_min_mean_max(output_prefix+'_min_mean_max.csv')
-	    self.status='success'        
+	    self.status='success'      
     	except IBootstrapException:
             self.report.append('FATAL ERROR')        
             self.status='failure'
@@ -214,8 +215,8 @@ class IBootstrap:
                 else: ac.append(1.0)
             if len(ac)<2:
                  print "not enough data points" 
-                 raise  IBootstrapException
-	    self.report.append("autocorrelation for %s and d=1 is %g" % (key,ac[1]))
+            else:
+                self.report.append("autocorrelation for %s and d=1 is %g" % (key,ac[1]))
 
 
     def trails(self,min_index,max_index):
