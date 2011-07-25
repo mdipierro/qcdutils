@@ -20,7 +20,8 @@ class IPlot:
                  raw=False,
                  autocorrelations=False,
                  trails=False,
-                 bootstrap_samples=False):
+                 bootstrap_samples=False,
+                 plot_range=(None,None)):
         if raw:
             self.plot_raw_data(filename+'_raw_data.csv')
         if autocorrelations:
@@ -29,7 +30,8 @@ class IPlot:
             self.plot_trails(filename+'_trails.csv')
 	if bootstrap_samples:
             self.plot_samples(filename+'_samples.csv')
-	self.plot_min_mean_max(filename+'_min_mean_max.csv',items)
+	self.plot_min_mean_max(filename+'_min_mean_max.csv',items,
+                               plot_range)
 
     def plot_raw_data(self,filename):
         print 'plotting raw data...'
@@ -82,7 +84,7 @@ class IPlot:
                  xlab=tag,ylab="frequency",filename=filename2)
 
 
-    def plot_min_mean_max(self,filename,xlab=['t']):
+    def plot_min_mean_max(self,filename,xlab=['t'],plot_range=(None,None)):
         print 'plotting summary with error bars (%s)...' % ','.join(xlab)
 	lines=list(csv.reader(open(filename,'r'),
                               delimiter=',',quoting=csv.QUOTE_NONNUMERIC))
@@ -92,6 +94,7 @@ class IPlot:
 	for tag in tags:
 	    if tag[0]=='[': break
 	sets={}
+        min_t,max_t = plot_range 
 	for items in lines[1:]:
 	   tag, data = items[0], items[1:]       
 	   legend=""
@@ -103,8 +106,9 @@ class IPlot:
 	   else:
 	       points=sets[legend]
 	   t=data[index]
-           x,yminus,y,yplus = t, data[-3],data[-2],data[-1]
-           points.append((t,y,0.5*(yplus-yminus)))
+           if (min_t==None or t>=min_t) and  (max_t==None or t<max_t):
+               x,yminus,y,yplus = t, data[-3],data[-2],data[-1]
+               points.append((t,y,0.5*(yplus-yminus)))
 	for legend in sets.keys():
             filename2 = filename[:-4]+'_%s.png' % clean(tag)
             print filename2
@@ -130,16 +134,23 @@ def shell_iplot():
 		      help='make bootstrap samples plots')
     parser.add_option('-v','--plot_variables',default='',dest='plot_variables',
 		      help='plotting variables')
+    parser.add_option('-R','--range',default=':',dest='range',
+		      help='range as in 0:1000')
     parser.add_option('-f','--fit',default=[],dest='fits',
 		      action='append',
 		      help='fits to be performs on results')
     (options, args) = parser.parse_args()
     if options.fits:
 	print 'sorry -f not implemented yet!'
+    def parse_range(x):
+        a,b = x.split(':')
+        a,b = (float(a) if a else None,float(b) if b else None)
+        return (a,b)
     plot=IPlot(options.input_prefix,options.plot_variables.split(','),
                raw=options.raw,
                autocorrelations=options.autocorrelations,
                trails=options.trails,
-               bootstrap_samples=options.bootstrap_samples)
+               bootstrap_samples=options.bootstrap_samples,
+               plot_range = parse_range(options.range))
 
 if __name__=='__main__': shell_iplot()
