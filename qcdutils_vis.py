@@ -21,20 +21,20 @@ Examples:
 
 1) make a dummy vtk file
 
-   qcdutils-vis.py -m 10 folder/test.vtk
+   qcdutils_vis.py -m 10 folder/test.vtk
 
 2) reads fields from multiple vtk files
 
-   qcdutils-vis.py -r field folder/*.vtk
+   qcdutils_vis.py -r field folder/*.vtk
 
 3) extract fields as multiple files
 
-   qcdutils-vis.py -s field folder/*.vtk
+   qcdutils_vis.py -s field folder/*.vtk
 
 (fields in files will be renamed as "slice")
 4) interpolate vtk files
 
-   qcdutils-vis.py -i 9 folder/*.vtk
+   qcdutils_vis.py -i 9 folder/*.vtk
 
 tricubic Resample/Interpolate individual vtk files
 
@@ -42,7 +42,7 @@ tricubic Resample/Interpolate individual vtk files
 
 6) render a vtk file as a jpeg image
 
-   qcdutils-vis.py -p 'AnnotationAttributes[axes3D.bboxFlag=0];ResampleAttributes[samplesX=160;samplesY=160;samplesZ=160];ContourAttributes[SetMultiColor(9,$orange)]' 'folder/*.vtk'
+   qcdutils_vis.py -p 'AnnotationAttributes[axes3D.bboxFlag=0];ResampleAttributes[samplesX=160;samplesY=160;samplesZ=160];ContourAttributes[SetMultiColor(9,$orange)]' 'folder/*.vtk'
 
 Filename convetions
 ===================

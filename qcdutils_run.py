@@ -3,13 +3,13 @@ import sys, os, re, urllib
 FERMIQCD = 'http://fermiqcd.googlecode.com/hg/Libraries/'
 GROUP = 'fermiqcd@googlegroup.com'
 USAGE = """
-qcdutils-run.py is a tool to help you download and use fermiqcd from
+qcdutils_run.py is a tool to help you download and use fermiqcd from
 
     http://code.google.com/p/fermiqcd
 
 When you run:
  
-    python qcdutils-run.py [args]
+    python qcdutils_run.py [args]
  
 It will:
 - create a folder called fermiqcd/ in the current working directory
@@ -18,7 +18,7 @@ It will:
 - if -mpi in [args] run fermiqcd.exe with mpiCC else run it normally
 - pass the [args] to the compiled fermiqcd.exe
 
-Some [args] are handled by qcdutils-run.py:
+Some [args] are handled by qcdutils_run.py:
 -download force downloading of the libraries
 -compile  force recompiling of code
 -source   runs and compiles a different source file
@@ -34,17 +34,17 @@ Other [args] are handled by fermiqcd.cpp for example
 You can find the source code in fermiqcd/fermiqcd.cpp
 
 More examples:
-    qcdutils-run.py -gauge:start=cold:nt=16:nx=4
-    qcdutils-run.py -gauge:start=hot:nt=16:nx=4
-    qcdutils-run.py -gauge:load=cold.mdp
-    qcdutils-run.py -gauge:load=cold.mdp:steps=10:beta=5.7
-    qcdutils-run.py -gauge:load=*.mdp -plaquette
-    qcdutils-run.py -gauge:load=*.mdp -plaquette-vtk
-    qcdutils-run.py -gauge:load=*.mdp -polyaov-vtk
-    qcdutils-run.py -gauge:load=*.mdp -cool:steps=20 topcharge-vtk
-    qcdutils-run.py -gauge:load=*.mdp -quark:kappa=0.12:alg=minres-vtk
-    qcdutils-run.py -gauge:load=*.mdp -quark:kappa=0.12 -pion
-    qcdutils-run.py -gauge:load=*.mdp -quark:kappa=0.12 -pion-vtk
+    qcdutils_run.py -gauge:start=cold:nt=16:nx=4
+    qcdutils_run.py -gauge:start=hot:nt=16:nx=4
+    qcdutils_run.py -gauge:load=cold.mdp
+    qcdutils_run.py -gauge:load=cold.mdp:steps=10:beta=5.7
+    qcdutils_run.py -gauge:load=*.mdp -plaquette
+    qcdutils_run.py -gauge:load=*.mdp -plaquette-vtk
+    qcdutils_run.py -gauge:load=*.mdp -polyaov-vtk
+    qcdutils_run.py -gauge:load=*.mdp -cool:steps=20 topcharge-vtk
+    qcdutils_run.py -gauge:load=*.mdp -quark:kappa=0.12:alg=minres-vtk
+    qcdutils_run.py -gauge:load=*.mdp -quark:kappa=0.12 -pion
+    qcdutils_run.py -gauge:load=*.mdp -quark:kappa=0.12 -pion-vtk
 """
 
 def get_options(path):    
