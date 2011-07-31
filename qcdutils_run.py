@@ -97,12 +97,12 @@ def get_fermiqcd(path,download=False,compile=False,mpi=False,
         dir = os.getcwd()
         os.chdir(path)
         if mpi:            
-            if os.system('mpiCC')!=256:
+            if os.system('mpiCC -v')!=256:
                 print 'mpiCC command not found on your system'
                 sys.exit(1)
             command = 'mpiCC -lmpi -DPARALLEL -O3 -o %s-mpi.exe %s.cpp' % (filename,filename)
         else:
-            if os.system('g++')!=256:
+            if os.system('g++ -v')!=256:
                 print 'g++ command not found on your system'
                 sys.exit(1)
             command = 'g++ -O3 -o %s.exe %s.cpp' % (filename, filename)
