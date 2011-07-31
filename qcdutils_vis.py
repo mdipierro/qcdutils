@@ -10,6 +10,7 @@ import optparse
 import fnmatch
 import logging
 import random
+import shutil
 
 USAGE  = """
 This is a utility script to manipulate vtk files containing scalar files.
@@ -51,31 +52,31 @@ Original file:
 - file.vtk 
 
 File split into slice files:
-- file_00000000.vtk
-- file_00010000.vtk
-- file_00020000.vtk
-- file_00030000.vtk
+- file_0000.vtk
+- file_0001.vtk
+- file_0002.vtk
+- file_0003.vtk
 
 Interpoltade files
-- file_00000000.vtk
-- file_00000001.vtk (interpolated)
-- file_00010000.vtk
-- file_00010001.vtk (interpolated)
-- file_00020000.vtk
-- file_00020001.vtk (interpolated)
-- file_00030000.vtk
+- file_0000.0000.vtk
+- file_0000.0001.vtk (interpolated)
+- file_0001.0000.vtk
+- file_0001.0001.vtk (interpolated)
+- file_0002.0000.vtk
+- file_0002.0001.vtk (interpolated)
+- file_0003.0000.vtk
 
 Generated script:
 - visit_2fac1b86-5b86-42ee-8552-d1577d308dd2.py
 
 Images from interpolated slices:
-- file_00000000.vtk -> visit_2fac1b86-5b86-42ee-8552-d1577d308dd2_00000000.jpeg                    
-- file_00000001.vtk -> visit_2fac1b86-5b86-42ee-8552-d1577d308dd2_00010000.jpeg
-- file_00010000.vtk -> visit_2fac1b86-5b86-42ee-8552-d1577d308dd2_00020000.jpeg
-- file_00010001.vtk -> visit_2fac1b86-5b86-42ee-8552-d1577d308dd2_00030000.jpeg
-- file_00020000.vtk -> visit_2fac1b86-5b86-42ee-8552-d1577d308dd2_00040000.jpeg
-- file_00020001.vtk -> visit_2fac1b86-5b86-42ee-8552-d1577d308dd2_00050000.jpeg
-- file_00030000.vtk -> visit_2fac1b86-5b86-42ee-8552-d1577d308dd2_00060000.jpeg
+- file_0000.0000.vtk -> visit_2fac1b86-5b86-42ee-8552-d1577d308dd2_0000.0000.jpeg                    
+- file_0000.0001.vtk -> visit_2fac1b86-5b86-42ee-8552-d1577d308dd2_0001.0000.jpeg
+- file_0001.0000.vtk -> visit_2fac1b86-5b86-42ee-8552-d1577d308dd2_0002.0000.jpeg
+- file_0001.0001.vtk -> visit_2fac1b86-5b86-42ee-8552-d1577d308dd2_0003.0000.jpeg
+- file_0002.0000.vtk -> visit_2fac1b86-5b86-42ee-8552-d1577d308dd2_0004.0000.jpeg
+- file_0002.0001.vtk -> visit_2fac1b86-5b86-42ee-8552-d1577d308dd2_0005.0000.jpeg
+- file_0003.0000.vtk -> visit_2fac1b86-5b86-42ee-8552-d1577d308dd2_0006.0000.jpeg
 
 You can use streampclip to turn the jpegs into a movie
 """
@@ -383,8 +384,10 @@ def interpolate_couple(filename1, filename2, frames=1):
     generates new VTK files interpolating between two.
     the two files must have the same header and be ninary files with a single scalar.
     """
-    if filename1[-6:-4]!='00': raise RuntimeError, "filename must end in 00.vtk"
-    if filename2[-6:-4]!='00': raise RuntimeError, "filename must end in 00.vtk"
+    filename1_old,filename1 = filename1, filename1.replace('.vtk','.0000.vtk')
+    shutil.copyfile(filename1_old,filename1)    
+    filename2_old,filename2 = filename2, filename2.replace('.vtk','.0000.vtk')
+    shutil.copyfile(filename2_old,filename2)
     vtk1 = VTK(filename1,'rb')
     vtk2 = VTK(filename2,'rb')
     header1 = vtk1.read_header()
