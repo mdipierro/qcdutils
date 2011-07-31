@@ -298,7 +298,7 @@ def analysis(filename):
     """
     vtk = VTK(filename,'rb')
     header = vtk.read_header()
-    name = header['FILENAME']
+    name = header['SCALARS']
     points = []
     minimum = None
     maximum = None
@@ -362,17 +362,17 @@ def split(filename,pattern):
     workfiles = []
     while True:
         if not header:
-            header = ivtk.read_header()
+            master = header = ivtk.read_header()
         else:
-            partial_header = ivtk.read_partial_header()
-            if not partial_header:
+            header = ivtk.read_partial_header()
+            if not header:
                 break
         data = ivtk.read_data()
         if regex.match(header['SCALARS']):
             newfilename=filename.rsplit('.')[0]+'.%.4i0000.vtk' % i        
             ovtk = VTK(newfilename,'wb')
-            header['SCALARS']='slice'
-            ovtk.write_header(header)
+            master['SCALARS']='slice'
+            ovtk.write_header(master)
             ovtk.write_data(data)
             workfiles.append(newfilename)
             i+=1
