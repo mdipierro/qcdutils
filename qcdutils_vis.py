@@ -66,16 +66,16 @@ Interpoltade files
 - file_00030000.vtk
 
 Generated script:
-- visitvtk_2fac1b86-5b86-42ee-8552-d1577d308dd2.py
+- visit_2fac1b86-5b86-42ee-8552-d1577d308dd2.py
 
 Images from interpolated slices:
-- file_00000000.vtk -> visitvtk_2fac1b86-5b86-42ee-8552-d1577d308dd2_00000000.jpeg                    
-- file_00000001.vtk -> visitvtk_2fac1b86-5b86-42ee-8552-d1577d308dd2_00010000.jpeg
-- file_00010000.vtk -> visitvtk_2fac1b86-5b86-42ee-8552-d1577d308dd2_00020000.jpeg
-- file_00010001.vtk -> visitvtk_2fac1b86-5b86-42ee-8552-d1577d308dd2_00030000.jpeg
-- file_00020000.vtk -> visitvtk_2fac1b86-5b86-42ee-8552-d1577d308dd2_00040000.jpeg
-- file_00020001.vtk -> visitvtk_2fac1b86-5b86-42ee-8552-d1577d308dd2_00050000.jpeg
-- file_00030000.vtk -> visitvtk_2fac1b86-5b86-42ee-8552-d1577d308dd2_00060000.jpeg
+- file_00000000.vtk -> visit_2fac1b86-5b86-42ee-8552-d1577d308dd2_00000000.jpeg                    
+- file_00000001.vtk -> visit_2fac1b86-5b86-42ee-8552-d1577d308dd2_00010000.jpeg
+- file_00010000.vtk -> visit_2fac1b86-5b86-42ee-8552-d1577d308dd2_00020000.jpeg
+- file_00010001.vtk -> visit_2fac1b86-5b86-42ee-8552-d1577d308dd2_00030000.jpeg
+- file_00020000.vtk -> visit_2fac1b86-5b86-42ee-8552-d1577d308dd2_00040000.jpeg
+- file_00020001.vtk -> visit_2fac1b86-5b86-42ee-8552-d1577d308dd2_00050000.jpeg
+- file_00030000.vtk -> visit_2fac1b86-5b86-42ee-8552-d1577d308dd2_00060000.jpeg
 
 You can use streampclip to turn the jpegs into a movie
 """

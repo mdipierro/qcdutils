@@ -1290,7 +1290,7 @@ def main():
             notify('target folder:',target_folder)
             if not os.path.exists(target_folder):
                 os.mkdir(target_folder)
-            download(data['token'],data['files'],target_folder,options)
+            download(data.get('token','none'),data['files'],target_folder,options)
         conversion_path = os.path.join(target_folder,pattern.replace('nnnnn','*'))
     elif options.source.startswith('ftp://') or options.source.startswith('sftp://'):
         username = raw_input('username:')
