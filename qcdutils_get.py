@@ -152,7 +152,7 @@ class Lime(object):
             reader = cStringIO.StringIO(reader)
         # write record header
         position = self.file.tell()
-        header = struct.pack('!iiq128s',self.magic,self.version,size,name)
+        header = struct.pack('!iHHq128s',self.magic,self.version,0,size,name)
         self.file.write(header)
         # read data from reader and write to file
         if hasattr(reader,'read'):
@@ -204,6 +204,15 @@ def test_lime():
         notify('record name: %s\nrecord size: %s\nrecord data: %s' % \
                    (name, size, reader.read(size)))
     lime.close()
+
+
+def copy_lime(input,output):
+    lime_in = Lime(input,'rb')
+    lime_out = Lime(output,'wb')
+    for name,reader,size in lime_in:
+        lime_out.write(name,reader,size)
+    lime_in.close()
+    lime_out.close()
 
 
 ##### reunitarize #############################################################
