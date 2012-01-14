@@ -44,6 +44,10 @@ tricubic Resample/Interpolate individual vtk files
 6) render a vtk file as a jpeg image
 
    qcdutils_vis.py -p 'AnnotationAttributes[axes3D.bboxFlag=0];ResampleAttributes[samplesX=160;samplesY=160;samplesZ=160];ContourAttributes[SetMultiColor(9,$orange)]' 'folder/*.vtk'
+  
+   or simply
+
+   qcdutils_vis.py -p default 'folder/*.vtk'
 
 Filename convetions
 ===================
@@ -546,6 +550,9 @@ def main():
                       dest='pipeline',
                       help='visualizaiton pipeline instructions')
     (options, args) = parser.parse_args()
+    if options.pipeline=='default':
+        options.pipeline = 'AnnotationAttributes[axes3D.bboxFlag=0];ResampleAttributes[samplesX=160;samplesY=160;samplesZ=160];ContourAttributes[SetMultiColor(9,$orange)]'
+        print 'assuming pipeline=',options.pipeline
     if not args:
         notify('no source specified')
         sys.exit(1)
