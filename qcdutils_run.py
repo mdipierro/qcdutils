@@ -41,7 +41,7 @@ More examples:
     qcdutils_run.py -gauge:load=*.mdp -plaquette
     qcdutils_run.py -gauge:load=*.mdp -plaquette-vtk
     qcdutils_run.py -gauge:load=*.mdp -polyaov-vtk
-    qcdutils_run.py -gauge:load=*.mdp -cool:steps=20 topcharge-vtk
+    qcdutils_run.py -gauge:load=*.mdp -cool:steps=20 -topcharge-vtk
     qcdutils_run.py -gauge:load=*.mdp -quark:kappa=0.12:alg=minres-vtk
     qcdutils_run.py -gauge:load=*.mdp -quark:kappa=0.12 -pion
     qcdutils_run.py -gauge:load=*.mdp -quark:kappa=0.12 -pion-vtk
