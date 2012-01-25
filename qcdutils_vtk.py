@@ -791,8 +791,15 @@ if ( window.addEventListener ) {
 
 if __name__=='__main__':
     p = P3D(width=800)
-    filename = os.path.basename(sys.argv[1])
-    points = read_vtk(sys.argv[1])
-    p.isosurface(points,alpha=0.3,red=250,green=0, blue=0)
-    p.isosurface(points,alpha=0.7,red=0,green=0, blue=255)
-    print HTML.replace('{{=title}}',filename).replace('{{=obj}}',p.xml())
+    try:
+        path = sys.argv[1]
+        filename = os.path.basename(path)
+        points = read_vtk(path)
+        p.isosurface(points,alpha=0.3,red=250,green=0, blue=0)
+        p.isosurface(points,alpha=0.7,red=0,green=0, blue=255)
+        output = path+'.html'
+        html = HTML.replace('{{=title}}',filename).replace('{{=obj}}',p.xml())
+        open(output,'wb').write(html)
+        print 'file %s written' % output
+    except:
+        print 'usage: qcdutils_vtk.py filename.vtk'
