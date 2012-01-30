@@ -1,3 +1,9 @@
+#!/usr/bin/python
+# -*- coding: iso-8859-1 -*-
+# create by: Massimo Di Pierro<mdipierro@cs.depaul.edu>
+# license: GPL2.0 + BSD
+# includes processing.min.js created by John Resig
+
 import os, sys
 
 __all__ = ['P3D', 'read_vtk', 'make_points']
@@ -790,6 +796,7 @@ if ( window.addEventListener ) {
 """
 
 if __name__=='__main__':
+
     p = P3D(width=800)
     try:
         path = sys.argv[1]

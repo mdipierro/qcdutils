@@ -1,3 +1,12 @@
+#!/usr/bin/python
+# -*- coding: iso-8859-1 -*-
+# create by: Massimo Di Pierro<mdipierro@cs.depaul.edu>
+# license: GPL2.0
+
+
+
+
+
 from math import *
 import re, random, copy, sys, csv
 from optparse import *
@@ -153,6 +162,7 @@ class IFit:
 	    if self.baesyan.has_key(key):
 	        least_squares+=((value-self.priors[key])/self.baesyan[key])**2
         return least_squares
+
     def move(self,**variables):        
 	"""
 	makes a moves in the space of parameters, in the direction 

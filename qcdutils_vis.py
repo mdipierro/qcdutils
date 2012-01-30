@@ -1,4 +1,9 @@
 #!/usr/bin/python
+# -*- coding: iso-8859-1 -*-
+# create by: Massimo Di Pierro<mdipierro@cs.depaul.edu>
+# license: GPL2.0
+
+
 import sys
 import os
 import re

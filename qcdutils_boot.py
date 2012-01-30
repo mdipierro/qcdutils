@@ -1,3 +1,8 @@
+#!/usr/bin/python
+# -*- coding: iso-8859-1 -*-
+# create by: Massimo Di Pierro<mdipierro@cs.depaul.edu>
+# license: GPL2.0
+
 import sys, re, copy, random, glob, csv
 from optparse import *
 from math import *
@@ -178,7 +183,8 @@ class IBootstrap:
 		    else: loc[key]=v
 	    variables[e]=copy.copy(loc)
 	    exec('from math import *') in loc
-            if self.import_module: exec('from %s import *' % self.import_module) in loc	    
+            if self.import_module:
+                exec('from %s import *' % self.import_module) in loc	    
             if not self.restricted_eval(condition,loc): isvalid=False
 	    if loc['__result__']==False: isvalid=False
 	    if isvalid:
