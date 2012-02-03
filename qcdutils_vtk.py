@@ -796,17 +796,70 @@ if ( window.addEventListener ) {
 """
 
 if __name__=='__main__':
-
+    import optparse
+    usage = 'usage: qcdutils_vtk.py filename.vtk'
+    version= ""
+    parser = optparse.OptionParser(usage, None, optparse.Option, version)
+    parser.add_option('-u',
+                      '--upper-threshold',
+                      default='0.7',
+                      dest='upper',
+                      help='treshold for isosurface')
+    parser.add_option('-l',
+                      '--lower-threshold',
+                      default='0.3',
+                      dest='lower',
+                      help='treshold for isosurface')
+    parser.add_option('-R',
+                      '--upper-red',
+                      default='255',
+                      dest='upper_red',
+                      help='color component for upper isosurface')
+    parser.add_option('-G',
+                      '--upper-green',
+                      default='0',
+                      dest='upper_green',
+                      help='color component for upper isosurface')
+    parser.add_option('-B',
+                      '--upper-blue',
+                      default='0',
+                      dest='upper_blue',
+                      help='color component for upper isosurface')
+    parser.add_option('-r',
+                      '--lower-red',
+                      default='0',
+                      dest='lower_red',
+                      help='color component for lower isosurface')
+    parser.add_option('-g',
+                      '--lower-green',
+                      default='0',
+                      dest='lower_green',
+                      help='color component for lower isosurface')
+    parser.add_option('-b',
+                      '--lower-blue',
+                      default='255',
+                      dest='lower_blue',
+                      help='color component for lower isosurface')
+    (options, args) = parser.parse_args()
     p = P3D(width=800)
-    try:
-        path = sys.argv[1]
+    if args:
+        path = args[0]
         filename = os.path.basename(path)
+        if not os.path.exists(path):
+            print 'file %s does not exist' % path
+            sys.exit(0)
         points = read_vtk(path)
-        p.isosurface(points,alpha=0.3,red=250,green=0, blue=0)
-        p.isosurface(points,alpha=0.7,red=0,green=0, blue=255)
+        p.isosurface(points,alpha=float(options.upper),
+                     red = int(options.upper_red),
+                     green = int(options.upper_green),
+                     blue = int(options.upper_blue))
+        p.isosurface(points,alpha=float(options.lower),
+                     red = int(options.lower_red),
+                     green = int(options.lower_green),
+                     blue = int(options.lower_blue))
         output = path+'.html'
         html = HTML.replace('{{=title}}',filename).replace('{{=obj}}',p.xml())
         open(output,'wb').write(html)
         print 'file %s written' % output
-    except:
-        print 'usage: qcdutils_vtk.py filename.vtk'
+    else:
+        print usage

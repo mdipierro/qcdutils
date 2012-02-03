@@ -3,10 +3,6 @@
 # create by: Massimo Di Pierro<mdipierro@cs.depaul.edu>
 # license: GPL2.0
 
-
-
-
-
 from math import *
 import re, random, copy, sys, csv
 from optparse import *
