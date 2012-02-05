@@ -14,7 +14,7 @@ from numpy.linalg import *
 usage = \
     "qcdutils_fit.py [OPTIONS] 'expression@values'\n" \
     "  Example: qcdutils-fit.py 'a*x+b@a=3,b=0'\n" \
-    "  default filename is ibootstrap_min_mean_max.csv\n" \
+    "  default filename is qcdutils_min_mean_max.csv\n" \
     "  ...., 'x', 'min', 'mean', 'max'\n" \
     "  ...., 23, 10, 11, 12\n" \
     "  ...., etc etc etc\n"
@@ -27,7 +27,7 @@ version = \
     "  Written by Massimo Di Pierro <mdipierro@cs.depaul.edu>\n"
 
 description = \
-    "This program takes data produced by ibootstrap and fits it\n" \
+    "This program takes data produced by qcdutils and fits it\n" \
     "it also does correlated fits by using the built-in function\n" \
     "(a==b)"
 
@@ -206,7 +206,7 @@ def test():
 
 def read_min_mean_max_file(filename):
     """
-    reads a standard ibootstrap_min_mean_max.csv file,
+    reads a standard qcdutils_min_mean_max.csv file,
     extract all the points and symetrizes the error bars
     """
     reader=csv.reader(open(filename,'r'),delimiter=',',
@@ -266,7 +266,7 @@ def main_ifit():
 		      help="extrpolation point")
     parser.add_option("-i", "--input_prefix",
 		      type='string',dest="input_prefix",
-		      default='ibootstrap',
+		      default="qcdutils",
 		      help="prefix used to build input filename [prefix]_min_mean_max.csv")
     options,args=parser.parse_args()
     if options.test:

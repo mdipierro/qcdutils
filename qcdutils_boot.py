@@ -30,7 +30,7 @@ class IBootstrapException(Exception): pass
 class IBootstrap:
     def __init__(self,filepattern="*.log",expression="x[<a>]",condition="a%2==0",
                  min_index=0,max_index=0,nsamples=100,percent=0.158,
-		 output_prefix='ibootstrap', raw=False,advanced=False,import_module=None,indices=None):
+		 output_prefix='qcdutils', raw=False,advanced=False,import_module=None,indices=None):
         # indices is ignored by ibootstrap but has to be here 
         # becase of the design of iplotwx.py
         self.expression=re.sub('(\"|\<|\>)','',expression)
@@ -298,14 +298,14 @@ class IBootstrap:
         self.samples=samples
         self.min_mean_max=min_mean_max
 
-    def log_raw_data(self,filename='ibootstrap_raw_data.csv'):
+    def log_raw_data(self,filename='qcdutils_raw_data.csv'):
         writer=csv.writer(open(filename,'w'),delimiter=',',quoting=csv.QUOTE_NONNUMERIC)
         keys=self.symbols.keys()
         keys.sort()
         for key in keys: writer.writerow([key]+self.symbols[key])
         self.report.append('raw data saved in %s' % filename)
 
-    def log_autocorrelations(self,filename='ibootstrap_autocorrelations.csv'):
+    def log_autocorrelations(self,filename='qcdutils_autocorrelations.csv'):
         writer=csv.writer(open(filename,'w'),delimiter=',',quoting=csv.QUOTE_NONNUMERIC)
         keys=self.autocorrelations.keys()
         keys.sort()
@@ -324,21 +324,21 @@ class IBootstrap:
         self.symbols=symbols
         self.length=length
 
-    def log_samples(self,filename='ibootstrap_samples.csv'):
+    def log_samples(self,filename='qcdutils_samples.csv'):
         writer=csv.writer(open(filename,'w'),delimiter=',',quoting=csv.QUOTE_NONNUMERIC)
         keys=self.samples.keys()
         keys.sort()
         for key in keys: writer.writerow([key]+self.samples[key])
         self.report.append('bootstrap samples saved in %s' % filename)
 
-    def log_trails(self,filename='ibootstrap_trails.csv'):
+    def log_trails(self,filename='qcdutils_trails.csv'):
         writer=csv.writer(open(filename,'w'),delimiter=',',quoting=csv.QUOTE_NONNUMERIC)
         keys=self.trails.keys()
         keys.sort()
         for key in keys: writer.writerow([key]+self.trails[key])
         self.report.append('average trails saved in %s' % filename)
     
-    def log_min_mean_max(self,filename='ibootstrap_min_mean_max.csv'): 
+    def log_min_mean_max(self,filename='qcdutils_min_mean_max.csv'): 
         writer=csv.writer(open(filename,'w'),delimiter=',',quoting=csv.QUOTE_NONNUMERIC)
         keys=self.min_mean_max.keys()
         keys.sort()             
@@ -391,7 +391,7 @@ def shell_ibootstrap():
     parser.add_option('-i','--import_module',dest='import_module',
 		      default=None,help='import a python module for expression evaluation')
     parser.add_option('-o','--output_prefix',dest='output_prefix',
-		      default='ibootstrap',help='path+prefix used to build output files')
+		      default='qcdutils',help='path+prefix used to build output files')
     (options, args) = parser.parse_args()
     if options.test: return test_ibootstrap()
     if len(args)<2: return 1

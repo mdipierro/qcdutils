@@ -15,7 +15,7 @@ version = "qcdutils_plot 1.0\n" \
           "  License: GPL 2.0\n\n" \
 	  "  Written by Massimo Di Pierro <mdipierro@cs.depaul.edu>\n"
 
-description = "plot the output of ibootstrap.py"
+description = "plot the output of qcdutils.py"
 
 try:
     os.environ['MPLCONfigureDIR'] = tempfile.mkdtemp()
@@ -175,8 +175,7 @@ class IPlot:
             self.plot_trails(filename+'_trails.csv')
 	if bootstrap_samples:
             self.plot_samples(filename+'_samples.csv')
-	self.plot_min_mean_max(filename+'_min_mean_max.csv',items,
-                               plot_range)
+	self.plot_min_mean_max(filename+'_min_mean_max.csv',items,plot_range)
 
     def plot_raw_data(self,filename):
         print 'plotting raw data...'
@@ -229,12 +228,12 @@ class IPlot:
                  xlab=tag,ylab="frequency",filename=filename2)
 
 
-    def plot_min_mean_max(self,filename,xlab=['t'],plot_range=(None,None)):
+    def plot_min_mean_max(self,filename,xlab=None,plot_range=(None,None)):
         print 'plotting summary with error bars (%s)...' % ','.join(xlab)
 	lines=list(csv.reader(open(filename,'r'),
                               delimiter=',',quoting=csv.QUOTE_NONNUMERIC))
 	tags=lines[0] 
-	if not xlab or xlab[0]=='': xlab=[tags[1]]
+	if not xlab or xlab[0]=='': xlab=tags[1:-3]
 	index=0
 	for tag in tags:
 	    if tag[0]=='[': break
@@ -263,7 +262,7 @@ class IPlot:
 def shell_iplot():
     parser=OptionParser(usage,None,Option,version)
     parser.description=description
-    parser.add_option('-i','--input_prefix',default='ibootstrap',dest='input_prefix',
+    parser.add_option('-i','--input_prefix',default='qcdutils',dest='input_prefix',
 		      help='the prefix used to build input filenames')
     parser.add_option('-r','--raw',action='store_true',
                       default=False,dest='raw',
