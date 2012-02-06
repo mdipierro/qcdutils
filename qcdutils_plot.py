@@ -28,134 +28,88 @@ from matplotlib.patches import Ellipse
 def E(f,data):
     return sum(f(x) for x in data)/len(data)
 
-def save_figure(figure,filename):
-    canvas=FigureCanvas(figure)
-    if not filename:
-        stream=cStringIO.StringIO()
-        canvas.print_png(stream)
-        return stream.getvalue()
-    else:
-        stream = open(filename,'wb')
-        canvas.print_png(stream)
-        try: stream.close()
-        except: pass
-        return filename
-
-def hist(title='',xlab='x',ylab='y',nbins=20,
-         data=[1,2,3,3,4,5,5,6,7,7,8,2,3,4,3,4,6],
-         filename='image.png',gaussian_fit=True):
-    figure=Figure(frameon=True)
+def draw(title='title',xlab='x',ylab='y',filename='tmp.png',
+         linesets=None, pointsets=None, histsets=None, ellisets=None,
+         xrange=None, yrange=None):
+    figure = Figure(frameon=False)
     figure.set_facecolor('white')
-    axes=figure.add_subplot(111)
+    axes = figure.add_subplot(111)
+    axes.grid(True)
     if title: axes.set_title(title)
     if xlab: axes.set_xlabel(xlab)
     if ylab: axes.set_ylabel(ylab)
-    ell=axes.hist(data,nbins)
-    if gaussian_fit:
-        mu = E(lambda x:x,data)
-        var = E(lambda x:(x-mu)**2,data)
-        a,b=min(data),max(data)
-        x = [(a+(b-a)/nbins*i) for i in range(nbins+1)]
-        norm = len(data)/math.sqrt(2.0*math.pi*var)
-        y = [norm*math.exp(-(p-mu)**2/(0.5*var)) for p in x]
-        axes.plot(x,y,linewidth="2",color="r")
-    return save_figure(figure,filename)
+    if xrange: axes.set_xlim(xrange)
+    if yrange: axes.set_ylim(yrange)
+    legend = [],[]
 
-def qqplot(title='',xlab='x',ylab='y',nbins=20,
-           data=[1,2,3,3,4,5,5,6,7,7,8,2,3,4,3,4,6],
-           filename='image.png'):
-    figure=Figure(frameon=True)
-    figure.set_facecolor('white')
-    axes=figure.add_subplot(111)
-    if title: axes.set_title(title)
-    if xlab: axes.set_xlabel(xlab)
-    if ylab: axes.set_ylabel(ylab)
-    mu = E(lambda x:x,data)
-    var = E(lambda x:(x-mu)**2,data)
-    sd = math.sqrt(var)
-    # y = [norm*math.exp(-(p-mu)**2/(0.5*var)) for p in x]
-    y = [x for x in data]
-    y.sort()
-    cdf1, cdf2 = [0.0], [0.0]
-    for x in y:
-        cdf1.append(cdf1[-1]+x)
-        #cdf1.append(0.5-math.erf((x-mu)/sd)/2)
-        cdf2.append(cdf1[-1]+x)
-    axes.plot(cdf1,cdf2,linewidth="0")
-    extremes=[cdf2[0],cdf2[-1]]
-    axes.plot(extremes,extremes,linewidth="1")
-    return save_figure(figure,filename)
+    for histset in histsets or []:
+        data = histset['data']
+        bins = histset.get('bins',20)
+        color = histset.get('color','blue')
+        q = axes.hist(data,bins, color=color)
+        if 'legend' in histset:
+            legend[0].append(q[0])
+            legend[1].append(histset['legend'])
+        if 'gaussian_fit' in histset:
+            mu = sum(data)/len(data)
+            var = sum((x-mu)**2 for x in data)/len(data)
+            a,b = min(data),max(data)
+            norm = (b-a)*len(data)/bins/math.sqrt(2.0*math.pi*var)
+            v = [(a+(b-a)/bins*i) for i in range(bins+1)]
+            data = [(x,norm*math.exp(-(x-mu)**2/(2.0*var))) for x in v]            
+            if not linesets: linesets=[]
+            linesets.append(dict(
+                    legend='fit: mu=%.3g, sigma=%.3g' % (mu,math.sqrt(var)),
+                    data = data,
+                    color='red'))
 
-def plot(title='',xlab='x',ylab='y',
-         data={'xxx':[(0,0),(1,1),(1,2),(3,3)],
-               'yyy':[(0,0,.2),(2,1,0.2),(2,2,0.2),(3,3,0.2)]},
-         filename='image.png'):
-    figure=Figure(frameon=True)
-    figure.set_facecolor('white')
-    axes=figure.add_subplot(111)
-    if title: axes.set_title(title)
-    if xlab: axes.set_xlabel(xlab)
-    if ylab: axes.set_ylabel(ylab)
-    keys=sorted(data)
-    for key in keys:
-        stream = data[key]
-        (x,y)=([],[])
-        yerr = []
-        for point in stream:
-            x.append(point[0])
-            y.append(point[1])
-            if len(point)==3:
-                yerr.append(point[2])
-        if len(yerr)==len(x):
-            axes.errorbar(x, y, yerr=yerr, fmt='o', linewidth="1")
-        else:
-            ell=axes.plot(x, y, linewidth="2")
-    return save_figure(figure,filename)
+    for lineset in linesets or []:
+        data = lineset['data']
+        color = lineset.get('color','black')
+        linestyle = lineset.get('style','-')
+        linewidth = lineset.get('width',2)
+        x = [p[0] for p in data]
+        y = [p[1] for p in data]
+        q = axes.plot(x, y, linestyle=linestyle,
+                      linewidth=linewidth, color=color)
+        if 'legend' in lineset:
+            legend[0].append(q[0])
+            legend[1].append(lineset['legend'])
 
-def color2d(title='',xlab='x',ylab='y',
-            data=[[1,2,3,4],[2,3,4,5],[3,4,5,6],[4,5,6,7]],
-            filename='image.png'):
-    figure=Figure(frameon=True)
-    figure.set_facecolor('white')
-    axes=figure.add_subplot(111)
-    if title: axes.set_title(title)
-    if xlab: axes.set_xlabel(xlab)
-    if ylab: axes.set_ylabel(ylab)
-    image=axes.imshow(data)
-    image.set_interpolation('bilinear')
-    return save_figure(figure,filename)
+    for pointset in pointsets or []:
+        data = pointset['data']
+        color = pointset.get('color','black')
+        marker = pointset.get('marker','o')
+        linewidth = pointset.get('width',2)
+        x = [p[0] for p in data]
+        y = [p[1] for p in data]
+        yerr = [p[2] for p in data]
+        q = axes.errorbar(x, y, yerr=yerr, fmt=marker,
+                          linewidth=linewidth, color=color)
+        if 'legend' in pointset:
+            legend[0].append(q[0])
+            legend[1].append(pointset['legend'])
 
-def scatter(title='',xlab='x',ylab='y',
-            data=None,filename='image.png'):
-    if data==None:
-        r=random.random
-        data=[(r()*10,r()*10,r(),r(),r(),r(),r()) for i in range(100)]
-    figure=Figure(frameon=True)
-    figure.set_facecolor('white')
-    axes=figure.add_subplot(111)
-    if title: axes.set_title(title)
-    if xlab: axes.set_xlabel(xlab)
-    if ylab: axes.set_ylabel(ylab)
-    for i,p in enumerate(data):
-        p=list(p)
-        while len(p)<4: p.append(0.01)
-        e=Ellipse(xy=p[:2],width=p[2],height=p[3])
-        axes.add_artist(e)
-        e.set_clip_box(axes.bbox)
-        e.set_alpha(0.5)
-        if len(p)==7:
-            e.set_facecolor(p[4:])
-        data[i]=p
-    axes.set_xlim(min(p[0]-p[2] for p in data), max(p[0]+p[2] for p in data))
-    axes.set_ylim(min(p[1]-p[3] for p in data), max(p[1]+p[3] for p in data))
-    return save_figure(figure,filename)
+
+    for elliset in ellisets or []:
+        data = elliset['data']
+        color = elliset.get('color','blue')
+        for point in data:
+            x, y = point[:2]
+            dx = point[2] if len(point)>2 else 0.01
+            dy = point[3] if len(point)>3 else dx
+            ellipse = Ellipse(xy=(x,y),width=dx,height=dy)
+            axes.add_artist(ellipse)
+            ellipse.set_clip_box(axes.bbox)
+            ellipse.set_alpha(0.5)
+            ellipse.set_facecolor(color)
+
+    if legend[0]: axes.legend(legend[0],legend[1])
+    canvas = FigureCanvas(figure)
+    canvas.print_png(open(filename,'wb'))
 
 def test():
-    plot(data=dict(set1=[(x,x**2,2.0*x) for x in range(10)]))
-
-if __name__=='__main__':
-    test()
-
+    draw(pointsets=[dict(data=dict(set1=[(x,x**2,2.0*x) for x in range(10)]))])
 
 def clean(text):
     return re.sub('\s+','',text.replace('/','_div_'))
@@ -184,18 +138,13 @@ class IPlot:
             tag = items[0]
             filename2 = filename[:-4]+'_%s.png' % clean(tag)
             print filename2
-            plot(data = {'':[point for point in enumerate(items[1:])]},
+            draw(linesets=[dict(data=[point for point in enumerate(items[1:])])],
                  xlab='step',ylab=tag,filename = filename2)
             filename2 = filename[:-4]+'_%s_hist.png' % clean(tag)
             print filename2
-            hist(data = items[1:],
+            draw(histsets=[dict(data = items[1:],gaussian_fit=True)],
                  xlab=tag,ylab='frequency',filename = filename2)            
             filename2 = filename[:-4]+'_%s_qq.png' % clean(tag)
-            print filename2
-            qqplot(data = items[1:],
-                   xlab='gaussian',ylab=tag,filename = filename2)            
-            # mu=E(lambda x:x,data)
-            # sd=math.sqrt(E(lambda x:(x-mu)**2,data))
 
     def plot_autocorrelations(self,filename):
         print 'plotting autocorrelations...'
@@ -204,7 +153,7 @@ class IPlot:
             tag = items[0]
             filename2 = filename[:-4]+'_%s.png' % clean(tag)
             print filename2
-            plot(data = {'':[point for point in enumerate(items[1:])]},
+            draw(linesets=[dict(data=[point for point in enumerate(items[1:])])],
                  xlab='step',ylab=tag,filename = filename2)
             
     def plot_trails(self,filename):
@@ -214,7 +163,7 @@ class IPlot:
             tag = items[0]
             filename2 = filename[:-4]+'_%s.png' % clean(tag)
             print filename2
-            plot(data = {'':[point for point in enumerate(items[1:])]},
+            draw(linesets=[dict(data=[point for point in enumerate(items[1:])])],
                  xlab='step',ylab=tag,filename = filename2)
 
     def plot_samples(self,filename):
@@ -224,7 +173,7 @@ class IPlot:
             tag= items[0]
             filename2 = filename[:-4]+'_%s.png' % clean(tag)
             print filename2
-            hist(data = items[1:],
+            draw(histsets=[dict(data = items[1:],gaussian_fit=True)],
                  xlab=tag,ylab="frequency",filename=filename2)
 
 
@@ -254,9 +203,9 @@ class IPlot:
                x,yminus,y,yplus = t, data[-3],data[-2],data[-1]
                points.append((t,y,0.5*(yplus-yminus)))
 	for legend in sets.keys():
-            filename2 = filename[:-4]+'_%s.png' % clean(tag)
+            filename2 = filename[:-4]+'.png'
             print filename2
-            plot(data = {legend:sets[legend]},
+            draw(pointsets = [dict(data=sets[legend])],
                  xlab=tags[index+1],ylab=tags[0],filename = filename2)
   
 def shell_iplot():

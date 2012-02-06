@@ -10,6 +10,11 @@ import re, random, copy, sys, csv
 from optparse import *
 from numpy import matrix
 from numpy.linalg import *
+try:
+    from qcdutils_plot import draw
+except ImportError:
+    print 'no qcdutils_plot.py, cannot draw'
+    draw = None
 
 usage = \
     "qcdutils_fit.py [OPTIONS] 'expression@values'\n" \
@@ -109,7 +114,7 @@ def fit(data, f, b, ap=1e-6, rp=1e-4, ns=200, bayesian=None):
     chi2 = sum(((y-f(x,b))/dy)**2 for x,y,dy in data)
     return b, chi2, H
 
-class IFit(object):
+class Fitter(object):
     def __init__(self,expression,points,symbols=None,
                  condition='True',modules=None):
 
@@ -121,6 +126,7 @@ class IFit(object):
 
         if not modules: modules = ['math']
         self.expression = expression # 'ax+b*exp(y)'
+        self.points = points
         self.symbols = symbols       # ['x','y']
         self.priors = {}             # {'a':(1,0.1), 'b':(2,1)]
         self.locals = {}             # {'exp':<function...>}
@@ -199,7 +205,7 @@ class IFit(object):
 def test():      
     points = [(x,y,2.0*x+3.0*y*y-0.01,2.0*x+3.0*y*y,2.0*x+3.0*y*y+0.01) \
                   for x in range(10) for y in range(10)]                  
-    fitter = IFit("a*x+b*y*y",points,symbols=('x','y'))
+    fitter = Fitter("a*x+b*y*y",points,symbols=('x','y'))
     print fitter.fit(a=1.0,b=2.0,_a=0.5)
     print fitter.extrapolate(x=11,y=11)
 
@@ -212,42 +218,43 @@ def read_min_mean_max_file(filename):
     reader=csv.reader(open(filename,'r'),delimiter=',',
                       quoting=csv.QUOTE_NONNUMERIC)
     lines=list(reader)
-    symbols=lines[0][:-3]
+    symbols=lines[0][1:-3]
     for i in range(len(symbols)):
 	if symbols[i]=='[min]': 
 	    symbols=symbols[:i]
 	    break
     i+=3
-    points=lines[1:]    
+    points=[line[1:] for line in lines[1:]]
     return symbols,points
 
-def test_ifit():
+def test_fitter():
     print 'generating points with z=x*sin(y)+4*y and dz=1'
     points=[[float(x),float(y),1.0*x*sin(y)+4*y-1,x*sin(y)+4*y,x*sin(y)+4*y+1] \
                 for x in range(10) for y in range(10)]
     print 'fitting with a*x*sin(y)+b*y should get a=1, b=4'
-    fitter = IFit("a*x*sin(y)+b*y",points,symbols=['x','y'])
+    fitter = Fitter("a*x*sin(y)+b*y",points,symbols=['x','y'])
     b, chi2, H = fitter.fit(a=0.0,b=0.0)
     print "a=", b['a'], "b=", b['b']
     print "chi2=",chi2
     print "Hessian=",H
     print "x->200, y->200, f->",fitter.extrapolate(x=200,y=200)
 
-def test_correlated_ifit():
+def test_correlated_fitter():
     print 'generating points with z=x*sin(y)+4*y and dz=1'
     points=[[x,y,x*sin(y)+4*y-1,x*sin(y)+4*y,x*sin(y)+4*y+1] \
                 for x in range(3) for y in range(100)]
     print 'fitting with (a0*(x==0)+a1*(x==1)+a2*(x==2))*sin(y)+c*y'
-    ifit=IFit("(a0*(x==0)+a1*(x==1)+a2*(x==2))*sin(y)+b*y",points,
+    fitter=Fitter("(a0*(x==0)+a1*(x==1)+a2*(x==2))*sin(y)+b*y",points,
               symbols=['x','y'])
-    print ifit.fit(a0=0.0,a1=0.0,a2=0.0,b=0.0)
+    print fitter.fit(a0=0.0,a1=0.0,a2=0.0,b=0.0)
 
-def clean(text):
-    return re.sub('\s+','',text.replace('/','_div_'))
-
-def main_ifit():
+def main_fitter():
     loc={}
     parser = OptionParser(usage, None, Option, version)
+    parser.add_option("-i", "--input",
+		      type="string", dest="input",
+		      default="qcdutils_min_mean_max.csv",
+		      help="input file (default qcdutils_min_mean_max.csv)")
     parser.add_option("-c", "--condition",
 		      type="string", dest="condition",
 		      default="True",
@@ -264,36 +271,43 @@ def main_ifit():
 		      type='string',dest="extrapolations",
 		      default=[],action='append',
 		      help="extrpolation point")
-    parser.add_option("-i", "--input_prefix",
-		      type='string',dest="input_prefix",
-		      default="qcdutils",
-		      help="prefix used to build input filename [prefix]_min_mean_max.csv")
+                      
     options,args=parser.parse_args()
     if options.test:
-	test_ifit()
+	test_fitter()
 	return
-    filename=options.input_prefix+'_min_mean_max.csv'
+    filename=options.input
     expression,initial=args[0].split('@')
     symbols,points=read_min_mean_max_file(filename)
-    ifit=IFit(expression,points,symbols,condition=options.condition)
+    fitter=Fitter(expression,points,symbols,condition=options.condition)
     variables=eval('dict(%s)' % initial,loc)
-    variables,chi2,hessian=ifit.fit(**variables)
+    variables,chi2,hessian=fitter.fit(**variables)
     for key,value in variables.items():
         print '%s = %g' % (key, value)
     print 'chi2=',chi2
-    print 'chi2/dof=',chi2/max(len(ifit.data)-len(variables)-1,1)
+    print 'chi2/dof=',chi2/max(len(fitter.data)-len(variables)-1,1)
     print 'covariance=',inv(hessian)        
+
+    pointsets = [dict(data=[(p[0],p[-2],0.5*(p[-1]-p[-3])) for p in points])]
     for item in options.extrapolations:
-        coordinates=restricted_eval('dict(%s)' % item,loc)	
-        e=ifit.extrapolate(**coordinates) 
+        coordinates=eval('dict(%s)' % item,{},loc)	
+        e=fitter.extrapolate(**coordinates) 
         print 'extrapolation %s -> %s' % (item,str(e))
+        pointsets.append(dict(marker='s',                              
+                              data=[(coordinates[symbols[0]],e,0)]))
+        points.append((coordinates[symbols[0]],e))
+    b = [variables[bi] for bi in fitter.variables]    
+    x_min = min(p[0] for p in points)
+    x_max = max(p[0] for p in points)
+    xs = [x_min+0.01*(x_max-x_min)*i for i in range(0,101)]
+    try:
+        linesets = [dict(data=[(x,fitter.f({symbols[0]:x},b)) for x in xs],
+                         color='red', style='--',
+                         legend = '%s@%s' % (expression,','.join('%s=%.3g' % i for i in variables.items())))]
+    except ArithmeticError:
+        print 'sorry, unable to plot fitting line'
+        linesets = []
+    draw(pointsets = pointsets,
+         linesets=linesets,filename=options.input.rsplit('.',1)[0]+'.fit.png' )
 
-    #### ADD SOME PLOTTING OPTION
-    if options.plot:
-        print 'attention! plotting is under development'
-        key1,key2=options.plot.split(',')
-        ifit.plot2d(key1,key2)
-        
-    # ifit.save_fit(options.input_prefix+'_fit_%s.csv' % clean(args[0]))
-
-if __name__=='__main__': main_ifit()
+if __name__=='__main__': main_fitter()
