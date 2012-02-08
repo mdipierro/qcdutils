@@ -76,7 +76,7 @@ def tolist(A):
     rows, cols = A.shape
     return [A[r,0] for r in xrange(rows)]
 
-def optimize_newton_multi_imporved(f, x, ap=1e-6, rp=1e-4, ns=20):
+def optimize_newton_multi_imporved(f, x, ap=1e-6, rp=1e-4, ns=200):
     """
     Multidimensional Newton optimizer
     on failure is performs a steepest descent
@@ -85,6 +85,7 @@ def optimize_newton_multi_imporved(f, x, ap=1e-6, rp=1e-4, ns=20):
     x = matrix([[element] for element in x])
     h = 10.0
     for k in xrange(ns):
+        print tolist(x), fx
         grad = gradient(f,tolist(x))
         (grad,H) = (gradient(f,tolist(x)), hessian(f,tolist(x)))
         if norm(H) < ap:
@@ -136,12 +137,13 @@ class Fitter(object):
         nx = len(symbols)            # 2
         self.variables = [           # ['a','b']
             key for key in re.compile('[a-zA-Z_]+\w*').findall(expression) \
-                if not key in self.locals and not key in symbols]
+                if not key in self.locals and not key in symbols and not key in \
+                ('is', 'if','else','int','float','div')]
         for point in points:
             symbol_dict = {}
             for i,symbol in enumerate(symbols):                
                 symbol_dict[symbol] = point[i]
-            self.locals.update(symbol_dict)
+            self.locals.update(symbol_dict)            
             if eval(condition,{},self.locals):
                 if len(point)==nx+3:
                     err = (point[nx+2]-point[nx])/2
@@ -151,7 +153,7 @@ class Fitter(object):
         self.values = {}
         self.ap=1e-6
         self.rp=1e-4
-        self.ns=200
+        self.ns=1000
 
     def f(self,x,b):
         """
@@ -271,6 +273,18 @@ def main_fitter():
 		      type='string',dest="extrapolations",
 		      default=[],action='append',
 		      help="extrpolation point")
+    parser.add_option("-a", "--absolute_precision",
+		      type='float',dest="ap",
+		      default=0.000001,
+		      help="absolute precision")
+    parser.add_option("-r", "--relative_precision",
+		      type='float',dest="rp",
+		      default=0.0001,
+		      help="relative precision")
+    parser.add_option("-n", "--number_steps",
+		      type='int',dest="ns",
+		      default=1000,
+		      help="number of steps")
                       
     options,args=parser.parse_args()
     if options.test:
@@ -280,6 +294,9 @@ def main_fitter():
     expression,initial=args[0].split('@')
     symbols,points=read_min_mean_max_file(filename)
     fitter=Fitter(expression,points,symbols,condition=options.condition)
+    fitter.ap = options.ap
+    fitter.rp = options.rp
+    fitter.ns = options.ns
     variables=eval('dict(%s)' % initial,loc)
     variables,chi2,hessian=fitter.fit(**variables)
     for key,value in variables.items():
@@ -304,7 +321,7 @@ def main_fitter():
         linesets = [dict(data=[(x,fitter.f({symbols[0]:x},b)) for x in xs],
                          color='red', style='--',
                          legend = '%s@%s' % (expression,','.join('%s=%.3g' % i for i in variables.items())))]
-    except ArithmeticError:
+    except:
         print 'sorry, unable to plot fitting line'
         linesets = []
     draw(pointsets = pointsets,

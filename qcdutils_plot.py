@@ -229,12 +229,7 @@ def shell_iplot():
 		      help='plotting variables')
     parser.add_option('-R','--range',default=':',dest='range',
 		      help='range as in 0:1000')
-    parser.add_option('-f','--fit',default=[],dest='fits',
-		      action='append',
-		      help='fits to be performs on results')
     (options, args) = parser.parse_args()
-    if options.fits:
-	print 'sorry -f not implemented yet!'
     def parse_range(x):
         a,b = x.split(':')
         a,b = (float(a) if a else None,float(b) if b else None)
