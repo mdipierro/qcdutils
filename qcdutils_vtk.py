@@ -4,7 +4,7 @@
 # license: GPL2.0 + BSD
 # includes processing.min.js created by John Resig
 
-import os, sys
+import os, sys, glob
 
 __all__ = ['P3D', 'read_vtk', 'make_points']
 
@@ -795,6 +795,25 @@ if ( window.addEventListener ) {
 </html>
 """
 
+def process(path,options):
+    if not os.path.exists(path):
+        print 'file %s does not exist' % path
+        sys.exit(0)
+    filename = os.path.basename(path)
+    points = read_vtk(path)
+    p.isosurface(points,alpha=float(options.upper),
+                 red = int(options.upper_red),
+                 green = int(options.upper_green),
+                 blue = int(options.upper_blue))
+    p.isosurface(points,alpha=float(options.lower),
+                 red = int(options.lower_red),
+                 green = int(options.lower_green),
+                 blue = int(options.lower_blue))
+    output = path+'.html'
+    html = HTML.replace('{{=title}}',filename).replace('{{=obj}}',p.xml())
+    open(output,'wb').write(html)
+    print 'file %s written' % output
+
 if __name__=='__main__':
     import optparse
     usage = 'usage: qcdutils_vtk.py filename.vtk'
@@ -843,23 +862,12 @@ if __name__=='__main__':
     (options, args) = parser.parse_args()
     p = P3D(width=800)
     if args:
-        path = args[0]
-        filename = os.path.basename(path)
-        if not os.path.exists(path):
-            print 'file %s does not exist' % path
-            sys.exit(0)
-        points = read_vtk(path)
-        p.isosurface(points,alpha=float(options.upper),
-                     red = int(options.upper_red),
-                     green = int(options.upper_green),
-                     blue = int(options.upper_blue))
-        p.isosurface(points,alpha=float(options.lower),
-                     red = int(options.lower_red),
-                     green = int(options.lower_green),
-                     blue = int(options.lower_blue))
-        output = path+'.html'
-        html = HTML.replace('{{=title}}',filename).replace('{{=obj}}',p.xml())
-        open(output,'wb').write(html)
-        print 'file %s written' % output
+        for path in glob.glob(args[0]):
+            print path
+            try:
+                process(path,options)
+                print 'SUCCESS'
+            except:
+                print 'FAIL'
     else:
         print usage

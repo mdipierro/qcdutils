@@ -324,7 +324,10 @@ def main_fitter():
     except:
         print 'sorry, unable to plot fitting line'
         linesets = []
-    draw(pointsets = pointsets,
-         linesets=linesets,filename=options.input.rsplit('.',1)[0]+'.fit.png' )
+    draw(title='',
+         xlab=symbols[0],
+         ylab=expression.replace('"','').replace('<','').replace('>',''),
+        pointsets = pointsets,
+        linesets=linesets,filename=options.input.rsplit('.',1)[0]+'.fit.png' )
 
 if __name__=='__main__': main_fitter()

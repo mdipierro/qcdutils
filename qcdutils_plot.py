@@ -138,12 +138,14 @@ class IPlot:
             tag = items[0]
             filename2 = filename[:-4]+'_%s.png' % clean(tag)
             print filename2
-            draw(linesets=[dict(data=[point for point in enumerate(items[1:])])],
+            draw(title='raw data',
+                 linesets=[dict(data=[point for point in enumerate(items[1:])])],
                  xlab='step',ylab=tag,filename = filename2)
             filename2 = filename[:-4]+'_%s_hist.png' % clean(tag)
             print filename2
-            draw(histsets=[dict(data = items[1:],gaussian_fit=True)],
-                 xlab=tag,ylab='frequency',filename = filename2)            
+            draw(title='distribution of values',
+                histsets=[dict(data = items[1:],gaussian_fit=True)],
+                xlab=tag,ylab='frequency',filename = filename2)            
             filename2 = filename[:-4]+'_%s_qq.png' % clean(tag)
 
     def plot_autocorrelations(self,filename):
@@ -153,8 +155,9 @@ class IPlot:
             tag = items[0]
             filename2 = filename[:-4]+'_%s.png' % clean(tag)
             print filename2
-            draw(linesets=[dict(data=[point for point in enumerate(items[1:])])],
-                 xlab='step',ylab=tag,filename = filename2)
+            draw(title='autocorrelation',
+                linesets=[dict(data=[point for point in enumerate(items[1:])])],
+                xlab='step',ylab=tag,filename = filename2)
             
     def plot_trails(self,filename):
         print 'plotting moving averages (trails)...'
@@ -163,8 +166,9 @@ class IPlot:
             tag = items[0]
             filename2 = filename[:-4]+'_%s.png' % clean(tag)
             print filename2
-            draw(linesets=[dict(data=[point for point in enumerate(items[1:])])],
-                 xlab='step',ylab=tag,filename = filename2)
+            draw(title='partial average',
+                linesets=[dict(data=[point for point in enumerate(items[1:])])],
+                xlab='step',ylab=tag,filename = filename2)
 
     def plot_samples(self,filename):
         print 'plotting bootstrap samples...'
@@ -173,8 +177,9 @@ class IPlot:
             tag= items[0]
             filename2 = filename[:-4]+'_%s.png' % clean(tag)
             print filename2
-            draw(histsets=[dict(data = items[1:],gaussian_fit=True)],
-                 xlab=tag,ylab="frequency",filename=filename2)
+            draw(title='distribution of bootstrap samples',
+                histsets=[dict(data = items[1:],gaussian_fit=True)],
+                xlab=tag,ylab="frequency",filename=filename2)
 
 
     def plot_min_mean_max(self,filename,xlab=None,plot_range=(None,None)):
@@ -205,7 +210,8 @@ class IPlot:
 	for legend in sets.keys():
             filename2 = filename[:-4]+'.png'
             print filename2
-            draw(pointsets = [dict(data=sets[legend])],
+            draw(title = 'results',
+                pointsets = [dict(data=sets[legend])],
                  xlab=tags[index+1],ylab=tags[0],filename = filename2)
   
 def shell_iplot():
