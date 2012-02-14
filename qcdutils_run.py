@@ -136,7 +136,7 @@ def main():
             get_options(path)
         else:            
             args = ' '.join(x for x in sys.argv[1:] if not x in ignore)
-            mpis = [x for x in sys.argv[1:] is x startswith('-mpi')]
+            mpis = [x for x in sys.argv[1:] if x.startswith('-mpi')]
             if mpis:
                 p = int(mpis[0][5:])
                 command = 'mpirun -n %s %s %s' % (p, path,args)
