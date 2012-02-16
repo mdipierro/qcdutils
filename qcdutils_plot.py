@@ -129,7 +129,7 @@ class IPlot:
             self.plot_trails(filename+'_trails.csv')
 	if bootstrap_samples:
             self.plot_samples(filename+'_samples.csv')
-	self.plot_min_mean_max(filename+'_min_mean_max.csv',items,plot_range)
+	self.plot_min_mean_max(filename+'_results.csv',items,plot_range)
 
     def plot_raw_data(self,filename):
         print 'plotting raw data...'

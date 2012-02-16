@@ -19,7 +19,7 @@ except ImportError:
 usage = \
     "qcdutils_fit.py [OPTIONS] 'expression@values'\n" \
     "  Example: qcdutils-fit.py 'a*x+b@a=3,b=0'\n" \
-    "  default filename is qcdutils_min_mean_max.csv\n" \
+    "  default filename is qcdutils_results.csv\n" \
     "  ...., 'x', 'min', 'mean', 'max'\n" \
     "  ...., 23, 10, 11, 12\n" \
     "  ...., etc etc etc\n"
@@ -214,7 +214,7 @@ def test():
 
 def read_min_mean_max_file(filename):
     """
-    reads a standard qcdutils_min_mean_max.csv file,
+    reads a standard qcdutils_results.csv file,
     extract all the points and symetrizes the error bars
     """
     reader=csv.reader(open(filename,'r'),delimiter=',',
@@ -255,8 +255,8 @@ def main_fitter():
     parser = OptionParser(usage, None, Option, version)
     parser.add_option("-i", "--input",
 		      type="string", dest="input",
-		      default="qcdutils_min_mean_max.csv",
-		      help="input file (default qcdutils_min_mean_max.csv)")
+		      default="qcdutils_results.csv",
+		      help="input file (default qcdutils_results.csv)")
     parser.add_option("-c", "--condition",
 		      type="string", dest="condition",
 		      default="True",

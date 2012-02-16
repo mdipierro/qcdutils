@@ -54,7 +54,7 @@ class IBootstrap:
             self.bootstrap(min_index,max_index,nsamples,percent)          
             self.log_trails(output_prefix+'_trails.csv')
 	    self.log_samples(output_prefix+'_samples.csv')
-            self.log_min_mean_max(output_prefix+'_min_mean_max.csv')
+            self.log_min_mean_max(output_prefix+'_results.csv')
 	    self.status='success'      
     	except IBootstrapException:
             self.report.append('FATAL ERROR')        
@@ -338,7 +338,7 @@ class IBootstrap:
         for key in keys: writer.writerow([key]+self.trails[key])
         self.report.append('average trails saved in %s' % filename)
     
-    def log_min_mean_max(self,filename='qcdutils_min_mean_max.csv'): 
+    def log_min_mean_max(self,filename='qcdutils_results.csv'): 
         writer=csv.writer(open(filename,'w'),delimiter=',',quoting=csv.QUOTE_NONNUMERIC)
         keys=self.min_mean_max.keys()
         keys.sort()             
