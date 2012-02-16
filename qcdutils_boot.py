@@ -363,12 +363,12 @@ def test_ibootstrap():
     file=open('test_samples.log','w')
     for i in range(100):
         for t in range(16):
-            file.write('2pt[%.2i]: %f\n' % (t,(2.0+random.gauss(0,0.1+0.05*t))*exp(-0.2*t)))    
+            file.write('C2[%.2i]: %f\n' % (t,(2.0+random.gauss(0,0.1+0.05*t))*exp(-0.2*t)))    
         for t in range(16):
             for t1 in range(16):
-               file.write('3pt[%.2i][%.2i]: %f\n' % (t,t1,(4.0+random.gauss(0,0.05*(2+t+t1)))*exp(-0.2*(t+t1))))
+               file.write('C3[%.2i][%.2i]: %f\n' % (t,t1,(4.0+random.gauss(0,0.05*(2+t+t1)))*exp(-0.2*(t+t1))))
     file.close()
-    IBootstrap('test_samples.log','"3pt[<t1>][<t2>]"/"2pt[<t1>]"/"2pt[<t2>]"','t1==t2',0,0,100).log_report()    
+    IBootstrap('test_samples.log','"C3[<t1>][<t2>]"/"C2[<t1>]"/"C2[<t2>]"','t1==t2',0,0,100).log_report()    
     return 0
 
 def shell_ibootstrap():
