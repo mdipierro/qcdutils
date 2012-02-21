@@ -27,7 +27,7 @@ Some [args] are handled by qcdutils_run.py:
 -download force downloading of the libraries
 -compile  force recompiling of code
 -source   runs and compiles a different source file
--mpi      for use with mpi (mpiCC and mpirun but be installed)
+-mpi=2    for use with mpi (mpiCC and mpirun but be installed)
 
 Other [args] are handled by fermiqcd.cpp for example
 -cold     make a cold gauge configuration
@@ -45,39 +45,40 @@ More examples:
     qcdutils_run.py -gauge:load=cold.mdp:steps=10:beta=5.7
     qcdutils_run.py -gauge:load=*.mdp -plaquette
     qcdutils_run.py -gauge:load=*.mdp -plaquette-vtk
-    qcdutils_run.py -gauge:load=*.mdp -polyaov-vtk
+    qcdutils_run.py -gauge:load=*.mdp -polyakov-vtk
     qcdutils_run.py -gauge:load=*.mdp -cool:steps=20 -topcharge-vtk
     qcdutils_run.py -gauge:load=*.mdp -quark:kappa=0.12:alg=minres-vtk
     qcdutils_run.py -gauge:load=*.mdp -quark:kappa=0.12 -pion
     qcdutils_run.py -gauge:load=*.mdp -quark:kappa=0.12 -pion-vtk
 """
 
-def get_options(path):    
+def get_options_base(path):
     path = os.path.join(os.path.split(path)[0],"fermiqcd.cpp")
     if not os.path.exists(path): return
     data=open(path,"r").read()
-    print 'Options:'
-    regex = re.compile('\("(.*?)",\s*"(.*?)",\s*"?(.*?)"?\)')
     d = {}
-    options = []
-    for item in regex.findall(data):
-        d[item[0]]=d.get(item[0],[])+[(item[1],item[2])]
-        if not item[0] in options:
-           options.append(item[0])
-    regex = re.compile('have\("(.*?)"\)')
-    for item in regex.findall(data):
-        d[item]=d.get(item,[])
-        if not item in options:
-           options.append(item)
-    for key in options:
+    regex = re.compile('arguments\.have\("(.*?)"\)')
+    for option in regex.findall(data):
+        d[option]=d.get(option,{})
+    regex = re.compile('arguments\.get\("(.*?)",\s*"(.*?)",\s*"?([^\"\)]*?)"?\)')
+    for option, attribute, values in regex.findall(data):
+        new_values = values.split('|')
+        attributes = d[option] = d.get(option,{})
+        values = attributes[attribute] = attributes.get(attribute,[])
+        for value in new_values:
+            if value and not value in values:
+                values.append(value)
+    return d
+
+def get_options(path):    
+    options = get_options_base(path)
+    print 'Options:'
+    for key in sorted(options): #['-gauge','-quark']+[a for a in sorted(options) if not a in ('-gauge','-quark')]:
         print '    %s' % key
-        done = set()
-        for a,b in d[key]:
-            if not a in done:
-                b = b.replace('|',' or ')
-                b = b.replace(' or ',' (default) or ',1)
-                print '        %s = %s' % (a,b)
-                done.add(a)
+        for attribute in sorted(options[key]):
+            values = options[key][attribute]
+            if values: values[0] = values[0]+' (default)'
+            print '        %s = %s' % (attribute,' or '.join(values))
 
 def get_fermiqcd(path,download=False,compile=False,mpi=False,
                  source='fermiqcd/fermiqcd.cpp'):
@@ -120,11 +121,37 @@ def get_fermiqcd(path,download=False,compile=False,mpi=False,
         os.chdir(dir)
     return exe
 
+def get_options_form(path):
+    options = get_options_base(path)
+    fields = []
+    for key in sorted(options):
+        k = key[1:].replace('-','_')
+        fields.append("Field('%s','boolean',default=False')" % k)
+        for attribute in sorted(options[key]):
+            values = options[key][attribute]            
+            d = values and values[0] or ''
+            try:
+                t = 'string'
+                float(values[0])
+                t = 'double' if '.' in values[0] else 'integer'
+            except: pass
+            if len(values)>1:
+                v = repr(values)
+                fields.append("Field('%s_%s','%s',default='%s',requires=IS_IN_SET(%s))" % \
+                                  (k,attribute,t,d,v))
+            else:
+                fields.append("Field('%s_%s','%s',default='%s')" % \
+                                  (k,attribute,t,d))
+    return 'form = SQLFORM.factory('+',\n        '.join(fields)+')'
+    
+
 def main():
     ignore = ['-download','-compile','-mpi','-source','-h']
     if '-h' in sys.argv:
         print USAGE
         get_options('fermiqcd/')
+    elif '-H' in sys.argv:
+        print get_options_form('fermiqcd/')
     else:
         source = ([x[8:] for x in sys.argv if x.startswith('-source:')]+['fermiqcd/fermiqcd'])[0]
         path = get_fermiqcd(os.getcwd(),
