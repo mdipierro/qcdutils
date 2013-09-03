@@ -46,8 +46,6 @@ import struct
 import mmap
 import glob
 import cStringIO
-import termios
-import signal
 import array
 import fcntl
 import logging
@@ -55,6 +53,13 @@ import traceback
 import shelve
 import xml.dom.minidom as dom
 import xml.parsers.expat as expat
+try:
+    import termios
+    import signal
+    HAVE_PROGRESSBAR = True
+except ImportError:
+    HAVE_PROGRESSBAR = False
+
 
 ##### global variables #############################################################
 
@@ -691,14 +696,42 @@ class GaugeMILC(QCDFormat):
                 self.offset = self.file.tell()
                 self.size = (nt,nx,ny,nz)
                 return (self.precision,nt,nx,ny,nz)
-        raise IOError, "file not in GaugeMDP format"
+        raise IOError, "file not in MILC format"
+    def write_header(self,precision,nt,nx,ny,nz):
+        self.file = open(self.filename,'wb')
+        items = [9]
+        items[0] = 20103
+        items[1:5] = nx,ny,nz,nt
+        items[5] = ""
+        items[6] = 0
+        items[7] = 0
+        items[8] = 0
+        header = struct.pack(self.header_format,items)
+        self.file.write(header)
+        self.offset = self.file.tell()
     def read_data(self,t,x,y,z):
         (nt,nx,ny,nz) = self.size
         i = self.offset + (x+nx*(y+ny*(z+nz*t)))*self.site_size
         self.file.seek(i)
         data = self.file.read(self.site_size)
         return self.unpack(data)
-
+    def write_data(self,data,target_precision = None):
+        if len(data) != self.base_size:
+            raise RuntimeError, "invalid data size"
+        return self.file.write(self.pack(data))
+    def convert_from(self,other,target_precision = None):
+        (precision,nt,nx,ny,nz) = other.read_header()
+        notify('  (precision: %s, size: %ix%ix%ix%i)' % (precision,nt,nx,ny,nz))
+        self.write_header(target_precision or precision,nt,nx,ny,nz)
+        pbar = ProgressBar(widgets = default_widgets , maxval = self.size[0]).start()
+        def reader():
+            for t in xrange(nt):
+                for z in xrange(nz):
+                    for y in xrange(ny):
+                        for x in xrange(nx):
+                            data = other.read_data(t,x,y,z)
+                            yield self.pack(data)
+                pbar.update(t)
 
 class GaugeNERSC(QCDFormat):
     def __init__(self,filename):
@@ -855,7 +888,6 @@ __version__ = "2.2"
 # 2005-06-02: v0.5 rewrite
 # 2004-??-??: v0.1 first version
 
-
 class ProgressBarWidget(object):
     """This is an element of ProgressBar formatting.
 
@@ -975,8 +1007,10 @@ class ReverseBar(Bar):
         bar = (self.left + (m*marked_width).rjust(cwidth) + self.right)
         return bar
 
-default_widgets = [Percentage(), ' ', Bar()]
-
+if HAVE_PROGRESSBAR:
+    default_widgets = [Percentage(), ' ', Bar()]
+else:
+    default_widgets = []
 
 class ProgressBar(object):
     """This is the ProgressBar class, it updates and prints the bar.
@@ -1101,6 +1135,21 @@ class ProgressBar(object):
         self.update(self.maxval)
         if self.signal_set:
             signal.signal(signal.SIGWINCH, signal.SIG_DFL)
+
+class ProgressBarDummyy(object):
+    def __init__(self, maxval = 100, widgets = default_widgets, 
+                 term_width = None, fd = sys.stderr):
+        self.nt = maxval
+    def update(self, t):
+        notify("completed %s/%s" % (t+1, self.nt))
+    def start(self):
+        notify("starting...")
+        return self
+    def finish(self):
+        notify("done!")
+
+if not HAVE_PROGRESSBAR:
+    ProgressBar = ProgressBarDummy
 
 ###### END PROGRESSBAR #########
 
@@ -1233,17 +1282,6 @@ def test_conversions():
         sys.exit(1)
 
 
-class DummyProgressBar(object):
-    """used to avoid the ProgressBar on -n, --noprogressbar"""
-    def __init__(self,*a,**b):
-        self.maxval=b['maxval']
-    def update(self,i):
-        notify('...%s/%s' % (i,self.maxval))
-    def start(self):
-        return self
-    def finish(self):
-        notify('...done!')
-
 def main():
     """this is the main program"""
     print LOGO
@@ -1272,7 +1310,7 @@ def main():
     ### disable progress bar if necessary
     if options.noprogressbar:
         global ProgressBar
-        ProgressBar = DummyProgressBar
+        ProgressBar = ProgressBarDummy
 
     ### run tests if asked
     if options.tests:
